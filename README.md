@@ -1,4 +1,4 @@
-# 🛡️ PortfolioX — Secure Portfolio Platform (MERN Stack)
+# 🛡️ Portfolio — Secure Portfolio Platform (MERN Stack)
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2018.0.0-blue.svg)](https://nodejs.org/)
 [![React Version](https://img.shields.io/badge/react-18.3.1-blue.svg)](https://react.dev/)
