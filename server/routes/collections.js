@@ -4,7 +4,6 @@ import Skill from '../models/Skill.js';
 import Experience from '../models/Experience.js';
 import Education from '../models/Education.js';
 import Certificate from '../models/Certificate.js';
-import Testimonial from '../models/Testimonial.js';
 import Blog from '../models/Blog.js';
 import Gallery from '../models/Gallery.js';
 import { mockDbHelper } from '../config/mockDb.js';
@@ -203,43 +202,6 @@ router.put('/certificates/:id', requireAuth, requireOwner, async (req, res) => {
     return res.json({ message: 'Certificate updated', certificate: updated });
   } catch (err) {
     return res.status(500).json({ message: 'Error updating certificate' });
-  }
-});
-
-// ================= TESTIMONIALS ENDPOINTS =================
-router.post('/testimonials', requireAuth, requireOwner, async (req, res) => {
-  const { clientName, position, company, comment, rating, image } = req.body;
-  if (!clientName || !comment) return res.status(400).json({ message: 'Missing fields' });
-
-  try {
-    const isMock = checkDbMode();
-    const itemData = { ownerId: req.user._id, clientName, position, company, comment, rating, image };
-    let saved;
-
-    if (isMock) {
-      itemData._id = 't_' + Math.random().toString(36).substr(2, 9);
-      saved = mockDbHelper.saveToCollection('testimonials', itemData);
-    } else {
-      saved = new Testimonial(itemData);
-      await saved.save();
-    }
-    return res.status(201).json({ message: 'Testimonial added', testimonial: saved });
-  } catch (err) {
-    return res.status(500).json({ message: 'Error adding testimonial' });
-  }
-});
-
-router.delete('/testimonials/:id', requireAuth, requireOwner, async (req, res) => {
-  try {
-    const isMock = checkDbMode();
-    if (isMock) {
-      mockDbHelper.deleteFromCollection('testimonials', req.params.id);
-    } else {
-      await Testimonial.findByIdAndDelete(req.params.id);
-    }
-    return res.json({ message: 'Testimonial deleted' });
-  } catch (err) {
-    return res.status(500).json({ message: 'Error deleting testimonial' });
   }
 });
 

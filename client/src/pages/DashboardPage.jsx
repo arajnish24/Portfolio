@@ -28,7 +28,6 @@ const DashboardPage = () => {
   const [experiences, setExperiences] = useState([]);
   const [educations, setEducations] = useState([]);
   const [certificates, setCertificates] = useState([]);
-  const [testimonials, setTestimonials] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -122,7 +121,6 @@ const DashboardPage = () => {
         if (data.experiences) setExperiences(data.experiences);
         if (data.educations) setEducations(data.educations);
         if (data.certificates) setCertificates(data.certificates);
-        if (data.testimonials) setTestimonials(data.testimonials);
         if (data.blogs) setBlogs(data.blogs);
         if (data.gallery) setGallery(data.gallery);
       }).catch(err => console.warn(err));

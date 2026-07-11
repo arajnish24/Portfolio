@@ -182,19 +182,6 @@ const getSeedData = () => {
     }
   ];
 
-  const defaultTestimonials = [
-    {
-      _id: "t_1",
-      ownerId: ownerId,
-      clientName: "Sarah Jenkins",
-      position: "VP of Product",
-      company: "ByteWave Solutions",
-      comment: "Alex is an exceptional developer who combines technical mastery of the MERN stack with a strong commitment to application security. A true professional!",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200"
-    }
-  ];
-
   const defaultBlogs = [
     {
       _id: "b_1",
@@ -244,7 +231,6 @@ const getSeedData = () => {
     experience: defaultExperience,
     education: defaultEducation,
     certificates: defaultCertificates,
-    testimonials: defaultTestimonials,
     blogs: defaultBlogs,
     messages: defaultMessages,
     analytics: defaultAnalytics,

@@ -4,7 +4,6 @@ import Skill from '../models/Skill.js';
 import Experience from '../models/Experience.js';
 import Education from '../models/Education.js';
 import Certificate from '../models/Certificate.js';
-import Testimonial from '../models/Testimonial.js';
 import Blog from '../models/Blog.js';
 import Project from '../models/Project.js';
 import Gallery from '../models/Gallery.js';
@@ -147,22 +146,7 @@ export const seedMongoDb = async () => {
       await Certificate.insertMany(defaultCertificates);
     }
 
-    // 6. Seed Testimonials
-    const testCount = await Testimonial.countDocuments({ ownerId });
-    if (testCount === 0) {
-      console.log('Seeding testimonials to MongoDB...');
-      const defaultTestimonials = [
-        {
-          ownerId,
-          clientName: "Sarah Jenkins",
-          position: "VP of Product",
-          company: "ByteWave Solutions",
-          comment: "Anmol is an exceptional developer who combines technical mastery of the MERN stack with a strong commitment to application security. A true professional!",
-          rating: 5
-        }
-      ];
-      await Testimonial.insertMany(defaultTestimonials);
-    }
+
 
     // 7. Seed Projects
     const projectCount = await Project.countDocuments({ ownerId });

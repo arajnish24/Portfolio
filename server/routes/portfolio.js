@@ -5,7 +5,6 @@ import Skill from '../models/Skill.js';
 import Experience from '../models/Experience.js';
 import Education from '../models/Education.js';
 import Certificate from '../models/Certificate.js';
-import Testimonial from '../models/Testimonial.js';
 import Blog from '../models/Blog.js';
 import Gallery from '../models/Gallery.js';
 import Analytics from '../models/Analytics.js';
@@ -103,7 +102,7 @@ router.get('/owner', async (req, res) => {
   try {
     const useMock = mongoose.connection.readyState !== 1;
     let owner;
-    let skills = [], experiences = [], educations = [], certificates = [], testimonials = [], blogs = [], gallery = [], projects = [];
+    let skills = [], experiences = [], educations = [], certificates = [], blogs = [], gallery = [], projects = [];
 
     if (useMock) {
       const users = mockDbHelper.getCollection('users');
@@ -119,7 +118,6 @@ router.get('/owner', async (req, res) => {
         experiences = filterOwnerItems('experience');
         educations = filterOwnerItems('education');
         certificates = filterOwnerItems('certificates');
-        testimonials = filterOwnerItems('testimonials');
         blogs = filterOwnerItems('blogs').filter(b => b.status === 'published');
         gallery = filterOwnerItems('gallery');
         projects = filterOwnerItems('projects');
@@ -132,7 +130,6 @@ router.get('/owner', async (req, res) => {
         experiences = await Experience.find(query);
         educations = await Education.find(query);
         certificates = await Certificate.find(query);
-        testimonials = await Testimonial.find(query);
         blogs = await Blog.find({ ...query, status: 'published' });
         gallery = await Gallery.find(query);
         projects = await Project.find(query);
@@ -152,7 +149,6 @@ router.get('/owner', async (req, res) => {
       experiences,
       educations,
       certificates,
-      testimonials,
       blogs,
       gallery,
       projects

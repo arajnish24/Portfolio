@@ -114,7 +114,7 @@ router.post('/signup', async (req, res) => {
       mockDbHelper.saveOtp(email.toLowerCase(), verificationOTP, otpExpires.getTime());
     }
 
-    console.log(`[OTP SERVICE] Verification OTP for ${email}: ${verificationOTP}`);
+    console.log(`[OTP SERVICE] Verification OTP for ${email}: [HIDDEN]`);
 
     const token = generateToken(user._id);
 
@@ -313,7 +313,7 @@ router.post('/forgot-password', async (req, res) => {
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     mockDbHelper.saveOtp(email.toLowerCase(), otp, expires.getTime());
-    console.log(`[OTP SERVICE] Password reset OTP for ${email}: ${otp}`);
+    console.log(`[OTP SERVICE] Password reset OTP for ${email}: [HIDDEN]`);
 
     // Dispatch live email to admin/owner
     await sendEmail({
@@ -390,7 +390,7 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
 
     // Save project OTP using namespace key
     mockDbHelper.saveOtp(`project_${email}`, otp, expires.getTime());
-    console.log(`[OTP SERVICE] Project modification OTP for ${email}: ${otp}`);
+    console.log(`[OTP SERVICE] Project modification OTP for ${email}: [HIDDEN]`);
 
     // Send email
     await sendEmail({

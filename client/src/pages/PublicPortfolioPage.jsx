@@ -81,9 +81,6 @@ const PublicPortfolioPage = () => {
       certificates: [
         { title: "Full Stack Web Development( MERN Stack)", organization: "Apna College", date: "2025" }
       ],
-      testimonials: [
-        { clientName: "Sarah Jenkins", position: "VP of Product", company: "ByteWave Solutions", comment: "Anmol is an exceptional developer who combines technical mastery of the MERN stack with a strong commitment to application security. A true professional!", rating: 5 }
-      ],
       blogs: [
         { _id: "b_1", title: "Securing MERN Stack Apps in Production", slug: "securing-mern-stack", category: "Security", views: 110, likes: 18, readingTime: "4 min read", content: "Security is paramount in web development...", createdAt: new Date().toISOString() }
       ],

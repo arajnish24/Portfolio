@@ -84,7 +84,7 @@ sequenceDiagram
 
 ### 🔐 Administrative Control & Tracking
 * **Analytical Recruiter Trackers**: Aggregates visitor metrics, counting profile views, resume downloads, device form factors (mobile/desktop), operating systems, and browsers.
-* **Admin Dashboard Hub**: Comprehensive dashboard to perform complete CRUD operations on projects, career milestones, educational items, certificates, testimonials, and gallery events.
+* **Admin Dashboard Hub**: Comprehensive dashboard to perform complete CRUD operations on projects, career milestones, educational items, certificates, and gallery events.
 * **Anti-Spam Controls**: Throttling via API rate limiters, strict JWT verification, and no public signup routes allowed once configured.
 
 ---
