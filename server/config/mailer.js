@@ -14,6 +14,9 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     return { simulated: true };
   }
 
+  // Fallback to SMTP_USER if destination is the default mock email
+  const recipient = (to === 'owner@portfolio.com' || !to) ? smtpUser : to;
+
   try {
     const transporter = nodemailer.createTransport({
       service: process.env.SMTP_SERVICE || 'gmail',
@@ -28,17 +31,17 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
     const mailOptions = {
       from: `"${process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'}" <${smtpUser}>`,
-      to,
+      to: recipient,
       subject,
       text,
       html
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✔ Email successfully dispatched to ${to}. Message ID: ${info.messageId}`);
+    console.log(`✔ Email successfully dispatched to ${recipient}. Message ID: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`🔴 Nodemailer failed to send email to ${to}:`, error);
+    console.error(`🔴 Nodemailer failed to send email to ${recipient}:`, error);
     return { success: false, error: error.message };
   }
 };

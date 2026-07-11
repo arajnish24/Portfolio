@@ -26,6 +26,9 @@ const sendOwnerEmailNotification = async (messageDetails, ownerEmail) => {
     return;
   }
 
+  // Fallback to SMTP_USER if the owner email is the default mock email
+  const recipientEmail = (ownerEmail === 'owner@portfolio.com' || !ownerEmail) ? smtpUser : ownerEmail;
+
   try {
     const transporter = nodemailer.createTransport({
       service: process.env.SMTP_SERVICE || 'gmail',
@@ -40,7 +43,7 @@ const sendOwnerEmailNotification = async (messageDetails, ownerEmail) => {
 
     const mailOptions = {
       from: `"${messageDetails.name}" <${smtpUser}>`,
-      to: ownerEmail,
+      to: recipientEmail,
       replyTo: messageDetails.email,
       subject: `[PortfolioX Alert] ${messageDetails.subject}`,
       html: `
@@ -59,7 +62,7 @@ const sendOwnerEmailNotification = async (messageDetails, ownerEmail) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✔ Portfolio alert email successfully dispatched to ${ownerEmail}`);
+    console.log(`✔ Portfolio alert email successfully dispatched to ${recipientEmail}`);
   } catch (error) {
     console.error('Nodemailer failed to send portfolio alert email:', error);
   }
@@ -87,6 +90,9 @@ router.post('/', async (req, res) => {
       replyContent: ''
     };
 
+    const snippet = message.length > 60 ? message.substring(0, 60) + '...' : message;
+    const notificationText = `New message from ${name}: "${snippet}"`;
+
     let savedMessage;
     if (isMock) {
       messageData._id = 'm_' + Math.random().toString(36).substr(2, 9);
@@ -94,7 +100,7 @@ router.post('/', async (req, res) => {
       
       // Save notification in dashboard
       mockDbHelper.saveToCollection('notifications', {
-        text: `New message from ${name} regarding "${messageData.subject}"`,
+        text: notificationText,
         type: 'message',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -105,7 +111,7 @@ router.post('/', async (req, res) => {
 
       // Create Mongoose notification
       await new Notification({
-        text: `New message from ${name} regarding "${messageData.subject}"`,
+        text: notificationText,
         type: 'message'
       }).save();
     }
