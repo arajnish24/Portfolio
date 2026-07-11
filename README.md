@@ -151,9 +151,9 @@ Portfolio/
 Create a **`.env`** file inside your **`server/`** folder:
 ```env
 PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/portfolio
-JWT_SECRET=supersecretjwtkey_portfolio_2026
-OTP_SECRET=otp_jwt_secret_key_12345
+MONGO_URI=Data_Base_link
+JWT_SECRET=your_jwt_secret_key_here
+OTP_SECRET=your_otp_secret_key_here
 CLOUDINARY_CLOUD_NAME=mock
 CLOUDINARY_API_KEY=mock
 CLOUDINARY_API_SECRET=mock
@@ -163,8 +163,8 @@ SMTP_SERVICE=gmail
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-google-app-password
+SMTP_USER=your-email@example.com
+SMTP_PASS=your-app-password-here
 ```
 
 ### 2. Install All Dependencies (Root, Server, and Client)
@@ -221,8 +221,8 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ### 1. Login Details (Owner Dashboard)
 * **Access URL**: [http://localhost:3000/login](http://localhost:3000/login)
-* **Email**: `owner@portfolio.com` (or your configured email once registered/seeded)
-* **Password**: `password123`
+* **Email**: `admin@example.com` (or the email configured in your environment/database)
+* **Password**: `your-secure-password` (configured during registration/seeding)
 
 ### 2. Verify Security Upload Gate
 1. Log in with the owner credentials above.
