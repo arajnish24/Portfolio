@@ -79,7 +79,7 @@ const PublicPortfolioPage = () => {
         { degree: "Matriculation", college: "The Divine Public School, Bikramganj, Rohtas", completedIn: "2021" }
       ],
       certificates: [
-        { title: "Full Stack Web Development( MERN Stack)", organization: "Apna College", date: "2025" }
+        { _id: "c_mern", title: "Full Stack Web Development( MERN Stack)", organization: "Apna College", date: "2025" }
       ],
       blogs: [
         { _id: "b_1", title: "Securing MERN Stack Apps in Production", slug: "securing-mern-stack", category: "Security", views: 110, likes: 18, readingTime: "4 min read", content: "Security is paramount in web development...", createdAt: new Date().toISOString() }
@@ -373,7 +373,7 @@ const PublicPortfolioPage = () => {
                 key={idx}
                 to={`/certificates/${cert._id}`}
                 target="_blank"
-                className="glass-panel p-6 rounded-2xl border border-slate-900 flex items-start gap-4 hover:border-slate-800 hover:bg-slate-900/15 hover:shadow-lg hover:shadow-blue-500/5 transition-all group cursor-pointer block text-left"
+                className="glass-panel p-6 rounded-2xl border border-slate-900 flex items-start gap-4 hover:border-slate-800 hover:bg-slate-900/15 hover:shadow-lg hover:shadow-blue-500/5 transition-all group cursor-pointer text-left"
               >
                 <div className="w-14 h-14 bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shrink-0 flex items-center justify-center group-hover:border-slate-800 transition-colors">
                   {cert.image && !cert.image.toLowerCase().endsWith('.pdf') ? (
