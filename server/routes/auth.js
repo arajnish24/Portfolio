@@ -114,7 +114,7 @@ router.post('/signup', async (req, res) => {
       mockDbHelper.saveOtp(email.toLowerCase(), verificationOTP, otpExpires.getTime());
     }
 
-    console.log(`[OTP SERVICE] Verification OTP for ${email}: [HIDDEN]`);
+
 
     const token = generateToken(user._id);
 
@@ -313,11 +313,12 @@ router.post('/forgot-password', async (req, res) => {
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     mockDbHelper.saveOtp(email.toLowerCase(), otp, expires.getTime());
-    console.log(`[OTP SERVICE] Password reset OTP for ${email}: [HIDDEN]`);
+
 
     // Dispatch live email to admin/owner
     await sendEmail({
       to: user.email.toLowerCase().trim(),
+      fromName: 'PortfolioX Security',
       subject: '[PortfolioX] Password Reset Verification Code',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -390,12 +391,13 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
 
     // Save project OTP using namespace key
     mockDbHelper.saveOtp(`project_${email}`, otp, expires.getTime());
-    console.log(`[OTP SERVICE] Project modification OTP for ${email}: [HIDDEN]`);
+
 
     // Send email
     await sendEmail({
       to: req.user.email.toLowerCase().trim(),
-      subject: '[Portfolio] Project Upload Authorization Credentials',
+      fromName: 'PortfolioX Security',
+      subject: '[PortfolioX] Project Upload Authorization Credentials',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <h2 style="color: #3b82f6; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; margin-top: 0; font-weight: 800;">Project Authorization Required</h2>

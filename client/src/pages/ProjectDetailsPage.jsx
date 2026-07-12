@@ -76,17 +76,18 @@ const ProjectDetailsPage = () => {
         'Authorization': token ? `Bearer ${token}` : ''
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to record like');
+        return res.json();
+      })
       .then(data => {
         setProject({ ...project, likes: data.likes });
         setLiked(true);
         localStorage.setItem(`liked_${id}`, 'true');
       })
-      .catch(() => {
-        // Fallback simulation
-        setProject({ ...project, likes: (project.likes || 0) + 1 });
-        setLiked(true);
-        localStorage.setItem(`liked_${id}`, 'true');
+      .catch((err) => {
+        console.error(err);
+        alert('Could not record your like. Please try again.');
       });
   };
 

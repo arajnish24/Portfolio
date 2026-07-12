@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 const PublicPortfolioPage = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,48 @@ const PublicPortfolioPage = () => {
     // Load local bookmarks
     const savedBookmarks = JSON.parse(localStorage.getItem('bookmarked_projects') || '[]');
     setBookmarkedProjects(savedBookmarks);
+
+    // Load local likes
+    const localLikes = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('liked_')) {
+        localLikes.push(key.replace('liked_', ''));
+      }
+    }
+    setLikedProjects(localLikes);
   }, []);
+
+  const handleLikeProject = (projectId) => {
+    if (likedProjects.includes(projectId)) return;
+
+    fetch(`/api/project/${projectId}/like`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to like project');
+        return res.json();
+      })
+      .then(resData => {
+        const updatedProjects = data.projects.map(p => {
+          if (p._id === projectId) {
+            return { ...p, likes: resData.likes };
+          }
+          return p;
+        });
+        setData({ ...data, projects: updatedProjects });
+        localStorage.setItem(`liked_${projectId}`, 'true');
+        setLikedProjects([...likedProjects, projectId]);
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Could not record your like. Please try again.');
+      });
+  };
 
   const handleTrackDownload = () => {
     fetch('/api/portfolio/track-download', { method: 'POST' }).catch(err => console.warn(err));
@@ -495,7 +536,13 @@ const PublicPortfolioPage = () => {
                 <div className="p-6 pt-0 mt-4 border-t border-slate-900/80 flex items-center justify-between text-xs">
                   <div className="flex gap-4 text-[10px] text-slate-500 font-bold">
                     <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {p.views || 0}</span>
-                    <span className="flex items-center gap-1"><ThumbsUp className="h-3.5 w-3.5" /> {p.likes || 0}</span>
+                    <button 
+                      onClick={() => handleLikeProject(p._id)}
+                      disabled={likedProjects.includes(p._id)}
+                      className={`flex items-center gap-1 hover:text-blue-400 transition-colors ${likedProjects.includes(p._id) ? 'text-blue-500 hover:text-blue-500 font-extrabold' : 'cursor-pointer font-bold'}`}
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5" /> {p.likes || 0}
+                    </button>
                   </div>
                   <div className="flex gap-2">
                     <Link to={`/projects/${p._id}`} className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-lg font-bold text-[10px] flex items-center justify-center">

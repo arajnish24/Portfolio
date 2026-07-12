@@ -74,9 +74,9 @@ router.post('/', async (req, res) => {
     // Trigger Nodemailer dispatch
     await sendEmail({
       to: ownerEmail,
-      fromName: name,
+      fromName: 'PortfolioX Alerts',
       replyTo: email,
-      subject: `[PortfolioX Alert] ${messageData.subject}`,
+      subject: `[PortfolioX Alert] Message from ${name}: ${subject || 'General Inquiry'}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff;">
           <h2 style="color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-top: 0;">New Message from Portfolio Website</h2>
