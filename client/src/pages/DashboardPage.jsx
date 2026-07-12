@@ -38,6 +38,8 @@ const DashboardPage = () => {
   const [emailVerificationOtp, setEmailVerificationOtp] = useState('');
   const [isTokenVerified, setIsTokenVerified] = useState(false);
   const [tokenError, setTokenError] = useState('');
+  const [tokenWarning, setTokenWarning] = useState('');
+  const [devOtp, setDevOtp] = useState('');
   const [editingProjectId, setEditingProjectId] = useState(null);
 
   // Add Project Form State
@@ -262,6 +264,8 @@ const DashboardPage = () => {
     setIsTokenVerified(false);
     setShowTokenModal(true);
     setTokenError('');
+    setTokenWarning('');
+    setDevOtp('');
     setVerificationToken('');
     setEmailVerificationOtp('');
     try {
@@ -281,6 +285,11 @@ const DashboardPage = () => {
         throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
       }
       if (!res.ok) throw new Error(data.message || 'Failed to dispatch verification OTP');
+
+      if (data.warning) {
+        setTokenWarning(data.warning);
+        setDevOtp(data.mockOtp);
+      }
     } catch (err) {
       setTokenError(`Failed to send email verification: ${err.message}`);
     }
@@ -1956,6 +1965,13 @@ const DashboardPage = () => {
               <p className="p-2 bg-rose-950/40 text-rose-300 border border-rose-900 rounded-xl text-[10px] font-bold text-center">
                 {tokenError}
               </p>
+            )}
+
+            {tokenWarning && (
+              <div className="p-3 bg-amber-950/40 border border-amber-900 text-amber-300 rounded-xl text-[10px] space-y-1">
+                <p className="font-bold text-center">⚠️ {tokenWarning}</p>
+                {devOtp && <p className="text-xs font-extrabold font-mono tracking-widest bg-slate-950/80 p-2 rounded text-center text-blue-400">{devOtp}</p>}
+              </div>
             )}
 
             <div className="space-y-3">

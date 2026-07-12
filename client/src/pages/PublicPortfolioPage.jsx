@@ -26,6 +26,7 @@ const PublicPortfolioPage = () => {
   const [bookmarkedProjects, setBookmarkedProjects] = useState([]);
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [contactStatus, setContactStatus] = useState('');
+  const [contactError, setContactError] = useState('');
   
   // Newsletter
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -164,18 +165,30 @@ const PublicPortfolioPage = () => {
     if (!contactForm.name || !contactForm.email || !contactForm.message) return;
 
     setContactStatus('submitting');
+    setContactError('');
     try {
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(contactForm)
       });
-      if (!res.ok) throw new Error();
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
+      }
+
+      if (!res.ok) throw new Error(data.message || 'Submission failed');
+
       setContactStatus('success');
       setContactForm({ name: '', email: '', phone: '', subject: '', message: '' });
       setTimeout(() => setContactStatus(''), 4000);
     } catch (err) {
       setContactStatus('error');
+      setContactError(err.message);
     }
   };
 
@@ -604,8 +617,9 @@ const PublicPortfolioPage = () => {
             </div>
           )}
           {contactStatus === 'error' && (
-            <div className="p-4 bg-rose-950/40 text-rose-300 border border-rose-900 rounded-xl text-xs font-semibold">
-              ❌ Submission failed. Please try again.
+            <div className="p-4 bg-rose-950/40 text-rose-300 border border-rose-900 rounded-xl text-xs font-semibold space-y-1">
+              <p>❌ Submission failed. Please try again.</p>
+              {contactError && <p className="text-[10px] text-rose-400 font-normal">{contactError}</p>}
             </div>
           )}
 
