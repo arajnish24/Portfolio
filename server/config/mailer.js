@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export const sendEmail = async ({ to, subject, html, text }) => {
+export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) => {
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
 
@@ -19,6 +19,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   if (!smtpUser || !smtpPass) {
     console.log(`\n================= EMAIL DISPATCH SIMULATOR =================`);
     console.log(`[SIMULATION] Sending email to: ${to}`);
+    if (replyTo) console.log(`Reply-To: ${replyTo}`);
     console.log(`Subject: ${subject}`);
     if (text) console.log(`Text Body: ${maskSensitiveData(text)}`);
     if (html) console.log(`HTML Body: \n${maskSensitiveData(html)}`);
@@ -27,7 +28,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 
   // Fallback to SMTP_USER if destination is the default mock email
-  const recipient = (to === 'owner@portfolio.com' || !to) ? smtpUser : to;
+  const recipient = (to && to.trim().toLowerCase() === 'owner@portfolio.com' || !to) ? smtpUser : to;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -42,11 +43,12 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     });
 
     const mailOptions = {
-      from: `"${process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'}" <${smtpUser}>`,
+      from: `"${fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'}" <${smtpUser}>`,
       to: recipient,
       subject,
       text,
-      html
+      html,
+      replyTo
     };
 
     const info = await transporter.sendMail(mailOptions);

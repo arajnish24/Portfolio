@@ -182,3 +182,23 @@ Once started:
 * `GET /analytics`: Retrieves metrics and visitor device characteristics.
 * `GET /notifications`: Fetches dashboard alert notifications.
 * `PUT /notifications/read`: Marks notifications as read.
+
+---
+
+## 🌐 Production Deployment & Render Configuration
+
+PortfolioX is configured to compile into a single-port production build served by the Express server, making it extremely easy to host on platforms like **Render**, **Heroku**, or **AWS**.
+
+### 1. Build and Start Scripts (Root package.json)
+The root [package.json](file:///D:/Code/Portfolio2/package.json) contains pre-configured scripts for single-command production builds:
+* **Build Command (Render)**: `npm run build` installs all workspace packages and compiles the React frontend bundle into `client/dist`.
+- **Start Command (Render)**: `npm start` boots the Node/Express server in production, serving the static client from the compiled `client/dist` directory.
+
+### 2. Persistent Storage on Render (Crucial for Local Uploads)
+Because Render container file systems are ephemeral, files uploaded directly to `server/uploads/` will be **deleted** whenever the container restarts, sleeps, or redeploys. To prevent this and persist your certificate PDFs, project screenshots, and profile images:
+1. In your Render Dashboard, select your service, go to **Disks**, and click **Add Disk**.
+2. Mount the disk at: `/opt/render/project/src/server/uploads` (or your absolute project uploads directory path).
+3. Alternatively, upload certificates to persistent cloud hosts (like Google Drive, S3, or Imgur) and paste the URL directly into the **Image URL** dashboard input.
+
+### 3. Helmet & PDF Previews
+To allow PDF certificate previews to render within same-origin `<iframe>` wrappers on the website, Helmet's default Content Security Policy (CSP) is configured to disable script/iframe blocking (`contentSecurityPolicy: false` and `crossOriginEmbedderPolicy: false`). This maintains general security headers (XSS, Clickjacking, MIME-sniffing protection) while keeping built-in browser PDF engines functional.

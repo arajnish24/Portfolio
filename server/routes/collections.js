@@ -13,6 +13,56 @@ const router = express.Router();
 
 const checkDbMode = () => mongoose.connection.readyState !== 1;
 
+// Helper to auto-create certificate from education certificate upload
+const syncEducationCertificate = async (ownerId, degree, college, university, duration, certificate) => {
+  if (!certificate) return;
+
+  try {
+    const isMock = checkDbMode();
+    const org = college || university || 'Institution';
+    
+    // Extract year from duration if possible, e.g. "2018 - 2022" -> "2022"
+    let date = duration || '';
+    if (duration && duration.includes('-')) {
+      const parts = duration.split('-');
+      date = parts[parts.length - 1].trim();
+    }
+
+    if (isMock) {
+      const certs = mockDbHelper.getCollection('certificates');
+      const exists = certs.some(c => c.image === certificate && c.ownerId === ownerId);
+      if (!exists) {
+        const itemData = {
+          _id: 'cert_' + Math.random().toString(36).substr(2, 9),
+          ownerId,
+          title: `Certificate of ${degree}`,
+          organization: org,
+          date,
+          verificationLink: certificate,
+          image: certificate,
+          createdAt: new Date().toISOString()
+        };
+        mockDbHelper.saveToCollection('certificates', itemData);
+      }
+    } else {
+      const exists = await Certificate.findOne({ image: certificate, ownerId });
+      if (!exists) {
+        const newCert = new Certificate({
+          ownerId,
+          title: `Certificate of ${degree}`,
+          organization: org,
+          date,
+          verificationLink: certificate,
+          image: certificate
+        });
+        await newCert.save();
+      }
+    }
+  } catch (err) {
+    console.error('Error syncing education certificate:', err);
+  }
+};
+
 // ================= SKILLS ENDPOINTS =================
 router.post('/skills', requireAuth, requireOwner, async (req, res) => {
   const { name, category, level } = req.body;
@@ -87,7 +137,6 @@ router.delete('/experience/:id', requireAuth, requireOwner, async (req, res) => 
   }
 });
 
-// ================= EDUCATION ENDPOINTS =================
 router.post('/education', requireAuth, requireOwner, async (req, res) => {
   const { degree, college, university, percentage, cgpa, duration, certificate } = req.body;
   if (!degree || !college) return res.status(400).json({ message: 'Missing fields' });
@@ -104,6 +153,11 @@ router.post('/education', requireAuth, requireOwner, async (req, res) => {
       saved = new Education(itemData);
       await saved.save();
     }
+
+    if (certificate) {
+      await syncEducationCertificate(req.user._id.toString(), degree, college, university, duration, certificate);
+    }
+
     return res.status(201).json({ message: 'Education added', education: saved });
   } catch (err) {
     return res.status(500).json({ message: 'Error adding education' });
@@ -438,6 +492,11 @@ router.put('/education/:id', requireAuth, requireOwner, async (req, res) => {
       updated = await Education.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
     }
     if (!updated) return res.status(404).json({ message: 'Education record not found' });
+    
+    if (certificate) {
+      await syncEducationCertificate(req.user._id.toString(), degree, college, university, duration, certificate);
+    }
+
     return res.json({ message: 'Education record updated', education: updated });
   } catch (err) {
     return res.status(500).json({ message: 'Error updating education' });

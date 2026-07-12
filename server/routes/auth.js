@@ -317,7 +317,7 @@ router.post('/forgot-password', async (req, res) => {
 
     // Dispatch live email to admin/owner
     await sendEmail({
-      to: user.email,
+      to: user.email.toLowerCase().trim(),
       subject: '[PortfolioX] Password Reset Verification Code',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -394,7 +394,7 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
 
     // Send email
     await sendEmail({
-      to: req.user.email,
+      to: req.user.email.toLowerCase().trim(),
       subject: '[Portfolio] Project Upload Authorization Credentials',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">

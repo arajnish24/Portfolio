@@ -69,7 +69,7 @@ router.post('/upload', requireAuth, requireOwner, upload.single('image'), async 
 });
 
 // Helper: Log visitor analytics in background
-const logAnalytics = async (req, actionType, details = {}) => {
+export const logAnalytics = async (req, actionType, details = {}) => {
   try {
     const useMock = mongoose.connection.readyState !== 1;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';

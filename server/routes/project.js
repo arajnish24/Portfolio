@@ -1,8 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import Project from '../models/Project.js';
 import { mockDbHelper } from '../config/mockDb.js';
 import { requireAuth, requireOwner } from '../middlewares/authMiddleware.js';
+import { logAnalytics } from './portfolio.js';
 
 const router = express.Router();
 
@@ -107,6 +109,9 @@ router.get('/:id', async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
+
+    // Log Analytics view in background
+    await logAnalytics(req, 'project_click', { projectId: id });
 
     return res.json({ project });
   } catch (error) {
@@ -275,10 +280,29 @@ router.delete('/:id', requireAuth, requireOwner, async (req, res) => {
 });
 
 // @route   POST /api/project/:id/like
-// @desc    Toggle project likes
-router.post('/:id/like', requireAuth, async (req, res) => {
+// @desc    Toggle project likes (supports guests via IP and authenticated users)
+router.post('/:id/like', async (req, res) => {
   const { id } = req.params;
-  const userId = req.user._id.toString();
+
+  // Identify the user/visitor
+  let visitorId = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+  // Try optional JWT verification if auth header is present
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'supersecretjwtkey_portfoliox_2026'
+      );
+      if (decoded && decoded.userId) {
+        visitorId = decoded.userId;
+      }
+    } catch (err) {
+      // If token is invalid, fallback to IP address
+    }
+  }
 
   try {
     const useMock = mongoose.connection.readyState !== 1;
@@ -299,14 +323,14 @@ router.post('/:id/like', requireAuth, async (req, res) => {
     }
 
     if (!project.likedBy) project.likedBy = [];
-    const likedIndex = project.likedBy.indexOf(userId);
+    const likedIndex = project.likedBy.indexOf(visitorId);
 
     let liked = false;
     if (likedIndex > -1) {
       project.likedBy.splice(likedIndex, 1);
       project.likes = Math.max(0, (project.likes || 1) - 1);
     } else {
-      project.likedBy.push(userId);
+      project.likedBy.push(visitorId);
       project.likes = (project.likes || 0) + 1;
       liked = true;
     }
