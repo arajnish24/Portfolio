@@ -1,4 +1,8 @@
 import express from 'express';
+import dns from 'dns';
+
+// Force IPv4 first (prevents SMTP timeout on Render due to IPv6 egress limits)
+dns.setDefaultResultOrder('ipv4first');
 import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
