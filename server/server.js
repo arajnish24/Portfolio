@@ -66,6 +66,15 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/collections', collectionsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+// Global JSON error handler for API routes
+app.use('/api', (err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(err.status || err.statusCode || 500).json({
+    message: err.message || 'Internal Server Error'
+  });
+});
+
+
 
 // Serve static assets in production
 const clientBuildDir = path.join(__dirname, '../client/dist');

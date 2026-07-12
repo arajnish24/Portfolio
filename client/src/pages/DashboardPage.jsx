@@ -272,8 +272,15 @@ const DashboardPage = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
+      }
+      if (!res.ok) throw new Error(data.message || 'Failed to dispatch verification OTP');
     } catch (err) {
       setTokenError(`Failed to send email verification: ${err.message}`);
     }
@@ -292,8 +299,15 @@ const DashboardPage = () => {
         },
         body: JSON.stringify({ token: verificationToken, emailOtp: emailVerificationOtp })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
+      }
+      if (!res.ok) throw new Error(data.message || 'Verification failed');
 
       setIsTokenVerified(true);
       setShowTokenModal(false);
