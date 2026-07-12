@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) => {
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
+  let lastError = null;
 
   const maskSensitiveData = (content) => {
     if (!content) return content;
@@ -22,18 +23,20 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // ==========================================
 
   // 1. Brevo HTTP API
-  if (process.env.BREVO_API_KEY) {
+  const brevoKey = process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim() : null;
+  if (brevoKey) {
+    const brevoSender = process.env.BREVO_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
     try {
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-key': process.env.BREVO_API_KEY
+          'api-key': brevoKey
         },
         body: JSON.stringify({
           sender: { 
             name: fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts', 
-            email: smtpUser || 'no-reply@portfolio.com' 
+            email: brevoSender 
           },
           to: [{ email: recipient }],
           subject,
@@ -51,20 +54,23 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       }
     } catch (apiError) {
       console.warn('🔴 Brevo HTTP API email dispatch failed, falling back:', apiError.message);
+      lastError = apiError;
     }
   }
 
   // 2. Resend HTTP API
-  if (process.env.RESEND_API_KEY) {
+  const resendKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
+  if (resendKey) {
+    const resendSender = process.env.RESEND_SENDER_EMAIL || 'onboarding@resend.dev';
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+          'Authorization': `Bearer ${resendKey}`
         },
         body: JSON.stringify({
-          from: `${fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts'} <onboarding@resend.dev>`,
+          from: `${fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts'} <${resendSender}>`,
           to: recipient,
           subject,
           html,
@@ -81,24 +87,27 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       }
     } catch (apiError) {
       console.warn('🔴 Resend HTTP API email dispatch failed, falling back:', apiError.message);
+      lastError = apiError;
     }
   }
 
   // 3. SendGrid HTTP API
-  if (process.env.SENDGRID_API_KEY) {
+  const sendgridKey = process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.trim() : null;
+  if (sendgridKey) {
+    const sendgridSender = process.env.SENDGRID_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
     try {
       const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`
+          'Authorization': `Bearer ${sendgridKey}`
         },
         body: JSON.stringify({
           personalizations: [{
             to: [{ email: recipient }]
           }],
           from: { 
-            email: smtpUser || 'no-reply@portfolio.com', 
+            email: sendgridSender, 
             name: fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts' 
           },
           subject,
@@ -118,6 +127,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       }
     } catch (apiError) {
       console.warn('🔴 SendGrid HTTP API email dispatch failed, falling back:', apiError.message);
+      lastError = apiError;
     }
   }
 
@@ -126,7 +136,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // ==========================================
 
   if (!smtpUser || !smtpPass) {
-    return { simulated: true };
+    return { success: false, error: lastError ? lastError.message : 'No mail credentials configured (missing SMTP user/pass and HTTP API keys).' };
   }
 
   const configsToTry = [];
@@ -173,8 +183,6 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
     greetingTimeout: 5000,
     tls: { rejectUnauthorized: false }
   });
-
-  let lastError = null;
 
   for (const transportConfig of configsToTry) {
     try {
