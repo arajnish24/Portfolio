@@ -213,3 +213,10 @@ To allow PDF certificate previews to render within same-origin `<iframe>` wrappe
 ### 4. Trust Proxy & DNS Egress Resolution (IPv4 First)
 * **Trust Proxy**: Since PortfolioX is hosted behind reverse proxies (like Render's routing layer), Express must be configured to trust the proxy headers. The server entry point [server.js](file:///D:/Code/Portfolio2/server/server.js) calls `app.set('trust proxy', 1);`. This enables `express-rate-limit` to accurately identify client IPs and prevents `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` validation crashes on proxy environments.
 * **DNS Resolution (IPv4 First)**: Deployed containers on Render often attempt to resolve external resources (like `smtp.gmail.com`) using IPv6 addresses. Since Render's outgoing infrastructure does not support IPv6 routing, the requests hang and time out (`Connection timeout`). To resolve this, `dns.setDefaultResultOrder('ipv4first');` is called at the top of [server.js](file:///D:/Code/Portfolio2/server/server.js) to force IPv4 DNS resolution first.
+
+### 5. Outbound SMTP Blocks & HTTP API Relays
+Many cloud hosting platforms (like Render, Heroku, or AWS) block standard outbound SMTP ports (465/587) or Google's SMTP endpoints to prevent spam. If you experience a `Connection timeout` error, you can completely bypass SMTP by configuring one of the following supported HTTP-based email APIs:
+* **Brevo (formerly Sendinblue)**: Add `BREVO_API_KEY` to your environment variables.
+* **Resend**: Add `RESEND_API_KEY` to your environment variables.
+* **SendGrid**: Add `SENDGRID_API_KEY` to your environment variables.
+If any of these API keys are present in the environment variables, the platform's email dispatcher ([mailer.js](file:///D:/Code/Portfolio2/server/config/mailer.js)) automatically redirects the mail via standard secure HTTPS port 443 (which is never blocked), avoiding connection timeouts.
