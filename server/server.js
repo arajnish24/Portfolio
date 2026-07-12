@@ -64,14 +64,23 @@ app.use('/api/collections', collectionsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Root path response
-app.get('/', (req, res) => {
-  res.json({
-    message: 'PortfolioX Secure Platform API is running',
-    status: 'online',
-    db_connected: mongoose.connection.readyState === 1
+// Serve static assets in production
+const clientBuildDir = path.join(__dirname, '../client/dist');
+if (process.env.NODE_ENV === 'production' || fs.existsSync(clientBuildDir)) {
+  app.use(express.static(clientBuildDir));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(clientBuildDir, 'index.html'));
   });
-});
+} else {
+  // Root path response for dev/API-only setup
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'PortfolioX Secure Platform API is running',
+      status: 'online',
+      db_connected: mongoose.connection.readyState === 1
+    });
+  });
+}
 
 // Start server and database connection
 const startServer = async () => {
