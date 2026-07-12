@@ -13,7 +13,7 @@ const router = express.Router();
 const generateToken = (userId) => {
   return jwt.sign(
     { userId },
-    process.env.JWT_SECRET || 'supersecretjwtkey_portfoliox_2026',
+    process.env.JWT_SECRET || 'supersecretjwtkey_portfolio_2026',
     { expiresIn: '30d' }
   );
 };
@@ -318,17 +318,17 @@ router.post('/forgot-password', async (req, res) => {
     // Dispatch live email to admin/owner
     const mailResult = await sendEmail({
       to: user.email.toLowerCase().trim(),
-      fromName: 'PortfolioX Security',
-      subject: '[PortfolioX] Password Reset Verification Code',
+      fromName: 'Portfolio Security',
+      subject: '[Portfolio] Password Reset Verification Code',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <h2 style="color: #3b82f6; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; margin-top: 0; font-weight: 800;">Password Reset Request</h2>
-          <p style="font-size: 14px; color: #475569; line-height: 1.5;">You requested a password reset for your PortfolioX administrator dashboard. Please use the following 6-digit verification code to reset your password:</p>
+          <p style="font-size: 14px; color: #475569; line-height: 1.5;">You requested a password reset for your Portfolio administrator dashboard. Please use the following 6-digit verification code to reset your password:</p>
           <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 18px; border-radius: 12px; text-align: center; margin: 20px 0;">
             <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #1e293b; font-family: monospace;">${otp}</span>
           </div>
           <p style="font-size: 12px; color: #64748b; line-height: 1.5;">This verification code is valid for <strong>10 minutes</strong>. If you did not make this request, please secure your credentials immediately.</p>
-          <p style="font-size: 10px; color: #94a3b8; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 12px;">This is an automated security notification from your PortfolioX secure platform.</p>
+          <p style="font-size: 10px; color: #94a3b8; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 12px;">This is an automated security notification from your Portfolio secure platform.</p>
         </div>
       `
     });
@@ -402,8 +402,8 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
     // Send email
     const mailResult = await sendEmail({
       to: req.user.email.toLowerCase().trim(),
-      fromName: 'PortfolioX Security',
-      subject: '[PortfolioX] Project Upload Authorization Credentials',
+      fromName: 'Portfolio Security',
+      subject: '[Portfolio] Project Upload Authorization Credentials',
       html: `
         <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <h2 style="color: #3b82f6; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; margin-top: 0; font-weight: 800;">Project Authorization Required</h2>

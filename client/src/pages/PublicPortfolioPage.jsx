@@ -206,12 +206,12 @@ const PublicPortfolioPage = () => {
   const { owner, skills, experiences, educations, certificates, blogs, gallery } = data;
   const projects = (data.projects && data.projects.length > 0) ? data.projects : [
     {
-      _id: "p_portfoliox",
-      title: "PortfolioX Platform",
+      _id: "p_portfolio",
+      title: "Portfolio Platform",
       description: "A production-ready secure MERN portfolio system with dual-key token restrictions, resilient database failovers, and embedded recruiter analytics trackers.",
       technologies: ["React", "Express.js", "Node.js", "MongoDB", "Tailwind CSS"],
-      github: "https://github.com/arajnish24/portfoliox",
-      live: "https://portfoliox-demo.com",
+      github: "https://github.com/arajnish24/portfolio",
+      live: "https://portfolio-demo.com",
       images: ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600"],
       features: ["Token verification", "Dynamic metrics dashboard", "Email alerts Integration", "Responsive grid layout"],
       duration: "3 months",

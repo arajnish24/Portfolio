@@ -1,11 +1,11 @@
-# 🛡️ PortfolioX — Secure Portfolio Platform (MERN Stack)
+# 🛡️ Portfolio — Secure Portfolio Platform (MERN Stack)
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2018.0.0-blue.svg)](https://nodejs.org/)
 [![React Version](https://img.shields.io/badge/react-18.3.1-blue.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/tailwind-v4.0--purple.svg)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-PortfolioX is a production-ready, highly secure personal portfolio platform built with the **MERN (MongoDB, Express, React, Node.js) Stack**, styled with **Tailwind CSS v4** and bundled with **Vite**. 
+Portfolio is a production-ready, highly secure personal portfolio platform built with the **MERN (MongoDB, Express, React, Node.js) Stack**, styled with **Tailwind CSS v4** and bundled with **Vite**. 
 
 It features dual-key verification gates, automatic database failover protection, built-in recruiter analytics trackers, dynamic theme controls (Dark, Light, Glassmorphism), and comprehensive CRUD dashboards for administrative management.
 
@@ -13,7 +13,7 @@ It features dual-key verification gates, automatic database failover protection,
 
 ## 🏗️ System Architecture & Workflow
 
-PortfolioX is designed with a decoupled **Client-Server Architecture** optimized for high security and database resilience:
+Portfolio is designed with a decoupled **Client-Server Architecture** optimized for high security and database resilience:
 
 ```mermaid
 graph TD
@@ -30,8 +30,8 @@ graph TD
 ```
 
 ### 1. Dual-Resiliency Database Architecture
-To guarantee 100% uptime and an "out-of-the-box" runnable state, PortfolioX implements a double-resilience pattern:
-* **Server-Side Failover**: Upon bootstrap, the Node/Express server attempts a connection to MongoDB. If the connection fails (e.g., offline or network error), the server automatically switches to a local file-based database (`server/data/db_fallback.json`) powered by synchronous read/write helper utilities in [mockDb.js](file:///D:/Code/Portfolio2/server/config/mockDb.js).
+To guarantee 100% uptime and an "out-of-the-box" runnable state, Portfolio implements a double-resilience pattern:
+* **Server-Side Failover**: Upon bootstrap, the Node/Express server attempts a connection to MongoDB. If the connection fails (e.g., offline or network error), the server gracefully switches to a local file-based database (`server/data/db_fallback.json`) powered by synchronous read/write helper utilities in [mockDb.js](file:///D:/Code/Portfolio2/server/config/mockDb.js).
 * **Client-Side Fallback**: If the Express backend server goes completely offline, the React client logs a warning and automatically renders pre-configured client-side mock data so visitors always see a functional portfolio layout.
 
 ### 2. Dual-Key Upload Gate Verification
@@ -150,7 +150,7 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=your_email_address_here
 SMTP_PASS=your_email_app_password_here
-SMTP_FROM_NAME="PortfolioX Alerts"
+SMTP_FROM_NAME="Portfolio Alerts"
 ```
 
 ### 2. Install Dependencies
@@ -194,7 +194,7 @@ Once started:
 
 ## 🌐 Production Deployment & Render Configuration
 
-PortfolioX is configured to compile into a single-port production build served by the Express server, making it extremely easy to host on platforms like **Render**, **Heroku**, or **AWS**.
+Portfolio is configured to compile into a single-port production build served by the Express server, making it extremely easy to host on platforms like **Render**, **Heroku**, or **AWS**.
 
 ### 1. Build and Start Scripts (Root package.json)
 The root [package.json](file:///D:/Code/Portfolio2/package.json) contains pre-configured scripts for single-command production builds:
@@ -211,7 +211,7 @@ Because Render container file systems are ephemeral, files uploaded directly to 
 To allow PDF certificate previews to render within same-origin `<iframe>` wrappers on the website, Helmet's default Content Security Policy (CSP) is configured to disable script/iframe blocking (`contentSecurityPolicy: false` and `crossOriginEmbedderPolicy: false`). This maintains general security headers (XSS, Clickjacking, MIME-sniffing protection) while keeping built-in browser PDF engines functional.
 
 ### 4. Trust Proxy & DNS Egress Resolution (IPv4 First)
-* **Trust Proxy**: Since PortfolioX is hosted behind reverse proxies (like Render's routing layer), Express must be configured to trust the proxy headers. The server entry point [server.js](file:///D:/Code/Portfolio2/server/server.js) calls `app.set('trust proxy', 1);`. This enables `express-rate-limit` to accurately identify client IPs and prevents `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` validation crashes on proxy environments.
+* **Trust Proxy**: Since Portfolio is hosted behind reverse proxies (like Render's routing layer), Express must be configured to trust the proxy headers. The server entry point [server.js](file:///D:/Code/Portfolio2/server/server.js) calls `app.set('trust proxy', 1);`. This enables `express-rate-limit` to accurately identify client IPs and prevents `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` validation crashes on proxy environments.
 * **DNS Resolution (IPv4 First)**: Deployed containers on Render often attempt to resolve external resources (like `smtp.gmail.com`) using IPv6 addresses. Since Render's outgoing infrastructure does not support IPv6 routing, the requests hang and time out (`Connection timeout`). To resolve this, `dns.setDefaultResultOrder('ipv4first');` is called at the top of [server.js](file:///D:/Code/Portfolio2/server/server.js) to force IPv4 DNS resolution first.
 
 ### 5. Outbound SMTP Blocks & HTTP API Relays

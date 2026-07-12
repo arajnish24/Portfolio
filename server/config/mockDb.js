@@ -55,13 +55,13 @@ const getSeedData = () => {
 
   const defaultProjects = [
     {
-      _id: "p_portfoliox",
+      _id: "p_portfolio",
       ownerId: ownerId,
-      title: "PortfolioX Platform",
+      title: "Portfolio Platform",
       description: "A production-ready secure MERN portfolio system with dual-key token restrictions, resilient database failovers, and embedded recruiter analytics trackers.",
       technologies: ["React", "Express.js", "Node.js", "MongoDB", "Tailwind CSS"],
-      github: "https://github.com/alex-carter-code/portfoliox",
-      live: "https://portfoliox-demo.com",
+      github: "https://github.com/arajnish24/portfolio",
+      live: "https://portfolio-demo.com",
       playStore: "",
       appStore: "",
       images: ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600"],
@@ -221,7 +221,7 @@ const getSeedData = () => {
     { _id: "a_1", ip: "127.0.0.1", country: "United States", device: "Desktop", browser: "Chrome", os: "Windows", actionType: "profile_view", timestamp: new Date().toISOString() }
   ];
   const defaultNotifications = [
-    { _id: "n_1", text: "Welcome to your secure PortfolioX admin panel!", type: "system", isRead: false, createdAt: new Date().toISOString() }
+    { _id: "n_1", text: "Welcome to your secure Portfolio admin panel!", type: "system", isRead: false, createdAt: new Date().toISOString() }
   ];
 
   return {

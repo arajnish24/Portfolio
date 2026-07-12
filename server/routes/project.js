@@ -294,7 +294,7 @@ router.post('/:id/like', async (req, res) => {
     try {
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'supersecretjwtkey_portfoliox_2026'
+        process.env.JWT_SECRET || 'supersecretjwtkey_portfolio_2026'
       );
       if (decoded && decoded.userId) {
         visitorId = decoded.userId;

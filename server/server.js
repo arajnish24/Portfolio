@@ -91,7 +91,7 @@ if (process.env.NODE_ENV === 'production' || fs.existsSync(clientBuildDir)) {
   // Root path response for dev/API-only setup
   app.get('/', (req, res) => {
     res.json({
-      message: 'PortfolioX Secure Platform API is running',
+      message: 'Portfolio Secure Platform API is running',
       status: 'online',
       db_connected: mongoose.connection.readyState === 1
     });
@@ -100,7 +100,7 @@ if (process.env.NODE_ENV === 'production' || fs.existsSync(clientBuildDir)) {
 
 // Start server and database connection
 const startServer = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/portfoliox';
+  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/portfolio';
   
   console.log('Attempting connection to MongoDB...');
   

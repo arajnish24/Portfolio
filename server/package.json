@@ -1,5 +1,5 @@
 {
-  "name": "portfoliox-server",
+  "name": "portfolio-server",
   "version": "1.0.0",
   "description": "Secure Individual Portfolio Platform Backend",
   "main": "server.js",

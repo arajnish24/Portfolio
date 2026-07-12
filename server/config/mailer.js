@@ -32,7 +32,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
         },
         body: JSON.stringify({
           sender: { 
-            name: fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts', 
+            name: fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts', 
             email: smtpUser || 'no-reply@portfolio.com' 
           },
           to: [{ email: recipient }],
@@ -64,7 +64,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: `${fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'} <onboarding@resend.dev>`,
+          from: `${fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts'} <onboarding@resend.dev>`,
           to: recipient,
           subject,
           html,
@@ -99,7 +99,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
           }],
           from: { 
             email: smtpUser || 'no-reply@portfolio.com', 
-            name: fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts' 
+            name: fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts' 
           },
           subject,
           content: [
@@ -181,7 +181,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       const transporter = nodemailer.createTransport(transportConfig);
       
       const mailOptions = {
-        from: `"${fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'}" <${smtpUser}>`,
+        from: `"${fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts'}" <${smtpUser}>`,
         to: recipient,
         subject,
         text,

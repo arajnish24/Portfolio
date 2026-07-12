@@ -155,11 +155,11 @@ export const seedMongoDb = async () => {
       const defaultProjects = [
         {
           ownerId,
-          title: "PortfolioX Platform",
+          title: "Portfolio Platform",
           description: "A production-ready secure MERN portfolio system with dual-key token restrictions, resilient database failovers, and embedded recruiter analytics trackers.",
           technologies: ["React", "Express.js", "Node.js", "MongoDB", "Tailwind CSS"],
-          github: "https://github.com/arajnish24/portfoliox",
-          live: "https://portfoliox-demo.com",
+          github: "https://github.com/arajnish24/portfolio",
+          live: "https://portfolio-demo.com",
           playStore: "https://play.google.com/store",
           appStore: "https://apple.com/app-store",
           images: ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=900"],

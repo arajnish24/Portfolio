@@ -14,7 +14,7 @@ export const requireAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'supersecretjwtkey_portfoliox_2026'
+      process.env.JWT_SECRET || 'supersecretjwtkey_portfolio_2026'
     );
 
     const useMock = mongoose.connection.readyState !== 1;
