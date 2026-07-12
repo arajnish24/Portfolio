@@ -22,16 +22,22 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   const recipient = (to && to.trim().toLowerCase() === 'owner@portfolio.com' || !to) ? smtpUser : to;
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: process.env.SMTP_SERVICE || 'gmail',
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
+    const transportConfig = {
       auth: {
         user: smtpUser,
         pass: smtpPass
       }
-    });
+    };
+
+    if (process.env.SMTP_SERVICE) {
+      transportConfig.service = process.env.SMTP_SERVICE;
+    } else {
+      transportConfig.host = process.env.SMTP_HOST || 'smtp.gmail.com';
+      transportConfig.port = parseInt(process.env.SMTP_PORT) || 587;
+      transportConfig.secure = process.env.SMTP_SECURE === 'true';
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
 
     const mailOptions = {
       from: `"${fromName || process.env.SMTP_FROM_NAME || 'PortfolioX Alerts'}" <${smtpUser}>`,

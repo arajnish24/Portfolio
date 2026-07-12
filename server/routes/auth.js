@@ -316,7 +316,7 @@ router.post('/forgot-password', async (req, res) => {
 
 
     // Dispatch live email to admin/owner
-    await sendEmail({
+    const mailResult = await sendEmail({
       to: user.email.toLowerCase().trim(),
       fromName: 'PortfolioX Security',
       subject: '[PortfolioX] Password Reset Verification Code',
@@ -332,6 +332,12 @@ router.post('/forgot-password', async (req, res) => {
         </div>
       `
     });
+
+    if (mailResult && mailResult.success === false) {
+      return res.status(500).json({
+        message: `Failed to send password reset email: ${mailResult.error}`
+      });
+    }
 
     return res.json({
       message: 'Password reset OTP sent to email',
@@ -394,7 +400,7 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
 
 
     // Send email
-    await sendEmail({
+    const mailResult = await sendEmail({
       to: req.user.email.toLowerCase().trim(),
       fromName: 'PortfolioX Security',
       subject: '[PortfolioX] Project Upload Authorization Credentials',
@@ -419,6 +425,12 @@ router.post('/send-project-otp', requireAuth, requireOwner, async (req, res) => 
         </div>
       `
     });
+
+    if (mailResult && mailResult.success === false) {
+      return res.status(500).json({
+        message: `Failed to send verification OTP email: ${mailResult.error}`
+      });
+    }
 
     return res.json({
       message: 'Project verification OTP sent to email',
