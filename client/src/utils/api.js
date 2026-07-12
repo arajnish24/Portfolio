@@ -7,11 +7,12 @@ export const handleResponse = async (response) => {
     }
     return data;
   } else {
-    // Non-JSON response (usually HTML gateway timeout/error pages)
-    const text = await response.text();
-    if (response.status === 504 || response.status === 502 || response.status === 404) {
-      throw new Error('Backend server connection refused. Please ensure the backend is running on port 5000 and the Vite dev port matches.');
-    }
-    throw new Error(text || `Server returned error status ${response.status}`);
+    // Clean up response text stream
+    await response.text();
+    throw new Error(
+      `The server returned HTML instead of JSON. This usually indicates:\n` +
+      `1. Your backend Web Service on Render is currently offline, sleeping, or restarting.\n` +
+      `2. If hosted separately, you forgot to configure the VITE_API_URL environment variable or Render Rewrite rules.`
+    );
   }
 };

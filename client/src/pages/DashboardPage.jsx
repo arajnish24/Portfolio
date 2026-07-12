@@ -281,8 +281,8 @@ const DashboardPage = () => {
       if (contentType && contentType.includes('application/json')) {
         data = await res.json();
       } else {
-        const text = await res.text();
-        throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
+        await res.text();
+        throw new Error('Server returned HTML instead of JSON. Check if your backend Web Service on Render is online, or verify your VITE_API_URL / Redirect rules.');
       }
       if (!res.ok) throw new Error(data.message || 'Failed to dispatch verification OTP');
 
@@ -313,8 +313,8 @@ const DashboardPage = () => {
       if (contentType && contentType.includes('application/json')) {
         data = await res.json();
       } else {
-        const text = await res.text();
-        throw new Error(text ? (text.slice(0, 100) + '...') : `Server error status ${res.status}`);
+        await res.text();
+        throw new Error('Server returned HTML instead of JSON. Check if your backend Web Service on Render is online, or verify your VITE_API_URL / Redirect rules.');
       }
       if (!res.ok) throw new Error(data.message || 'Verification failed');
 
