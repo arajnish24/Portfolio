@@ -53,8 +53,8 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
         throw new Error(data.message || JSON.stringify(data));
       }
     } catch (apiError) {
-      console.warn('🔴 Brevo HTTP API email dispatch failed, falling back:', apiError.message);
-      lastError = apiError;
+      console.error('🔴 Brevo HTTP API email dispatch failed:', apiError.message);
+      return { success: false, error: `Brevo API Dispatch Error: ${apiError.message}` };
     }
   }
 
@@ -86,8 +86,8 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
         throw new Error(data.message || JSON.stringify(data));
       }
     } catch (apiError) {
-      console.warn('🔴 Resend HTTP API email dispatch failed, falling back:', apiError.message);
-      lastError = apiError;
+      console.error('🔴 Resend HTTP API email dispatch failed:', apiError.message);
+      return { success: false, error: `Resend API Dispatch Error: ${apiError.message}` };
     }
   }
 
@@ -126,8 +126,8 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
         throw new Error(JSON.stringify(errData));
       }
     } catch (apiError) {
-      console.warn('🔴 SendGrid HTTP API email dispatch failed, falling back:', apiError.message);
-      lastError = apiError;
+      console.error('🔴 SendGrid HTTP API email dispatch failed:', apiError.message);
+      return { success: false, error: `SendGrid API Dispatch Error: ${apiError.message}` };
     }
   }
 
