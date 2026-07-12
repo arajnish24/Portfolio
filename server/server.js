@@ -21,6 +21,7 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (required for Render/Heroku rate-limiting)
 const PORT = process.env.PORT || 5000;
 
 // Security Middlewares
