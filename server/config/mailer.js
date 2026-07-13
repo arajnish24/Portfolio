@@ -23,12 +23,93 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   const recipient = (to && to.trim().toLowerCase() === 'owner@portfolio.com' || !to) ? (smtpUser || 'owner@portfolio.com') : to;
 
   // ==========================================
-  // RESILIENT SMTP PROTOCOL (ONLY METHOD ACTIVE)
+  // HTTP EMAIL PROVIDERS FALLBACK (BYPASSES SMTP TIMEOUTS IN PRODUCTION)
+  // ==========================================
+
+  // 2. Resend HTTP API
+  const resendKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
+  if (resendKey) {
+    const resendSender = process.env.RESEND_SENDER_EMAIL || 'onboarding@resend.dev';
+    try {
+      console.log('[MAILER] Attempting email dispatch via Resend HTTP API...');
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`
+        },
+        body: JSON.stringify({
+          from: `${smtpFrom} <${resendSender}>`,
+          to: recipient,
+          subject,
+          html,
+          text: text || 'View HTML version',
+          reply_to: replyTo
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('[MAILER] Resend HTTP API dispatch successful.');
+        return { success: true, messageId: data.id || 'resend-http' };
+      } else {
+        throw new Error(data.message || JSON.stringify(data));
+      }
+    } catch (apiError) {
+      console.error('🔴 [MAILER] Resend HTTP API email dispatch failed:', apiError.message);
+      lastError = apiError;
+    }
+  }
+
+  // 3. SendGrid HTTP API
+  const sendgridKey = process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.trim() : null;
+  if (sendgridKey) {
+    const sendgridSender = process.env.SENDGRID_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
+    try {
+      console.log('[MAILER] Attempting email dispatch via SendGrid HTTP API...');
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sendgridKey}`
+        },
+        body: JSON.stringify({
+          personalizations: [{
+            to: [{ email: recipient }]
+          }],
+          from: { 
+            email: sendgridSender, 
+            name: smtpFrom 
+          },
+          subject,
+          content: [
+            { type: 'text/html', value: html },
+            { type: 'text/plain', value: text || 'View HTML version' }
+          ],
+          reply_to: replyTo ? { email: replyTo } : undefined
+        })
+      });
+
+      if (response.ok) {
+        console.log('[MAILER] SendGrid HTTP API dispatch successful.');
+        return { success: true, messageId: response.headers.get('x-message-id') || 'sendgrid-http' };
+      } else {
+        const errData = await response.json();
+        throw new Error(JSON.stringify(errData));
+      }
+    } catch (apiError) {
+      console.error('🔴 [MAILER] SendGrid HTTP API email dispatch failed:', apiError.message);
+      lastError = apiError;
+    }
+  }
+
+  // ==========================================
+  // RESILIENT SMTP PROTOCOL (FALLBACK LOOP)
   // ==========================================
 
   if (!smtpUser || !smtpPass) {
     console.warn('[MAILER] SMTP User or Pass not configured. Skipping SMTP attempts.');
-    return { success: false, error: 'No mail credentials configured (missing SMTP user/pass).' };
+    return { success: false, error: lastError ? lastError.message : 'No mail credentials configured (missing SMTP user/pass and HTTP API keys).' };
   }
 
   const configsToTry = [];
