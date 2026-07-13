@@ -1,8 +1,12 @@
 import nodemailer from 'nodemailer';
 
 export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) => {
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const smtpUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+  const smtpPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+  const smtpHost = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const smtpPort = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587);
+  const smtpSecure = process.env.EMAIL_SECURE === 'true' || process.env.SMTP_SECURE === 'true';
+  const smtpFrom = process.env.EMAIL_FROM || fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts';
   let lastError = null;
 
   const maskSensitiveData = (content) => {
@@ -142,14 +146,16 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // ==========================================
 
   if (!smtpUser || !smtpPass) {
+    console.warn('[MAILER] SMTP User or Pass not configured. Skipping SMTP attempts.');
     return { success: false, error: lastError ? lastError.message : 'No mail credentials configured (missing SMTP user/pass and HTTP API keys).' };
   }
 
   const configsToTry = [];
 
-  if (process.env.SMTP_SERVICE) {
+  const emailService = process.env.EMAIL_SERVICE || process.env.SMTP_SERVICE;
+  if (emailService) {
     configsToTry.push({
-      service: process.env.SMTP_SERVICE,
+      service: emailService,
       auth: { user: smtpUser, pass: smtpPass },
       connectionTimeout: 5000,
       greetingTimeout: 5000,
@@ -157,11 +163,11 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
     });
   }
 
-  // Fallback 1: Port 587 with STARTTLS (usually open and preferred in cloud containers)
+  // Fallback 1: Custom/User-specified Host or Port 587
   configsToTry.push({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: { user: smtpUser, pass: smtpPass },
     connectionTimeout: 5000,
     greetingTimeout: 5000,
@@ -170,7 +176,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
 
   // Fallback 2: Direct SSL on Port 465
   configsToTry.push({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: smtpHost,
     port: 465,
     secure: true,
     auth: { user: smtpUser, pass: smtpPass },
@@ -179,7 +185,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
     tls: { rejectUnauthorized: false }
   });
 
-  // Fallback 3: Explicit Gmail standard STARTTLS on Port 587 (if user overrode port with something else)
+  // Fallback 3: Explicit Gmail standard STARTTLS on Port 587
   configsToTry.push({
     host: 'smtp.gmail.com',
     port: 587,
@@ -192,10 +198,15 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
 
   for (const transportConfig of configsToTry) {
     try {
+      console.log(`[MAILER] SMTP Connection Attempt: host=${transportConfig.host || transportConfig.service || 'default'}, port=${transportConfig.port || 'default'}, secure=${transportConfig.secure}`);
       const transporter = nodemailer.createTransport(transportConfig);
       
+      console.log('[MAILER] Verifying SMTP transporter...');
+      await transporter.verify();
+      console.log('[MAILER] SMTP transporter verified successfully!');
+
       const mailOptions = {
-        from: `"${fromName || process.env.SMTP_FROM_NAME || 'Portfolio Alerts'}" <${smtpUser}>`,
+        from: `"${smtpFrom}" <${smtpUser}>`,
         to: recipient,
         subject,
         text,
@@ -203,10 +214,12 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
         replyTo
       };
 
+      console.log(`[MAILER] Sending email via SMTP to ${recipient}...`);
       const info = await transporter.sendMail(mailOptions);
+      console.log('[MAILER] SMTP email sent successfully. Message ID:', info.messageId);
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.warn(`[MAILER] Failed attempting transport config (Port ${transportConfig.port || 'default'}):`, error.message);
+      console.error(`🔴 [MAILER] SMTP connection/auth failure (Host: ${transportConfig.host || transportConfig.service || 'default'}, Port: ${transportConfig.port || 'default'}):`, error);
       lastError = error;
     }
   }
