@@ -20,8 +20,10 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   };
 
   // Determine final recipient
-  const defaultOwnerEmail = (process.env.OWNER_EMAIL).trim().toLowerCase();
-  const recipient = (to && to.trim().toLowerCase() === defaultOwnerEmail || !to) ? (smtpUser || defaultOwnerEmail) : to;
+  const ownerEmail = (process.env.OWNER_EMAIL || smtpUser || 'owner@portfolio.com').trim().toLowerCase();
+  const recipient = (!to || to.trim().toLowerCase() === 'owner@portfolio.com' || to.trim().toLowerCase() === ownerEmail)
+    ? ownerEmail
+    : to;
 
   // ==========================================
   // HTTP EMAIL PROVIDERS FALLBACK (BYPASSES SMTP TIMEOUTS IN PRODUCTION)
@@ -30,7 +32,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // 2. Resend HTTP API
   const resendKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
   if (resendKey) {
-    const resendSender = process.env.RESEND_SENDER_EMAIL;
+    const resendSender = process.env.RESEND_SENDER_EMAIL || 'onboarding@resend.dev';
     try {
       console.log('[MAILER] Attempting email dispatch via Resend HTTP API...');
       const response = await fetch('https://api.resend.com/emails', {
@@ -40,7 +42,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
           'Authorization': `Bearer ${resendKey}`
         },
         body: JSON.stringify({
-          from: `${smtpFrom} <${resendSender}>`,
+          from: smtpFrom.includes('<') ? smtpFrom : `"${smtpFrom}" <${resendSender}>`,
           to: recipient,
           subject,
           html,

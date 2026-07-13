@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
     }
 
     // Fetch owner's email address from database for notification
-    let ownerEmail = "owner@portfolio.com";
+    let ownerEmail = process.env.OWNER_EMAIL || "owner@portfolio.com";
     try {
       const ownerUser = isMock
         ? mockDbHelper.getCollection("users").find((u) => u.role === "Owner")

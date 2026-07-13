@@ -59,6 +59,7 @@ export const seedMongoDb = async () => {
     } else {
       console.log("Force updating existing Owner assets path in MongoDB...");
       owner.name = process.env.OWNER_NAME;
+      owner.email = process.env.OWNER_EMAIL;
       owner.profileImage = "/AR.jpg";
       owner.resumeUrl = "/Updated_Resume.pdf";
       owner.location = process.env.OWNER_LOCATION;
