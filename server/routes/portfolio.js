@@ -9,32 +9,17 @@ import Blog from "../models/Blog.js";
 import Gallery from "../models/Gallery.js";
 import Analytics from "../models/Analytics.js";
 import Project from "../models/Project.js";
+import Media from "../models/Media.js";
 import { mockDbHelper } from "../config/mockDb.js";
 import { requireAuth, requireOwner } from "../middlewares/authMiddleware.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { v2 as cloudinary } from "cloudinary";
-
+import { cloudinary, isCloudinaryConfigured } from "../config/cloudconfig.js";
 import { fileURLToPath } from "url";
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Configure Cloudinary if credentials are provided and not set to 'mock'
-const isCloudinaryConfigured =
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_CLOUD_NAME !== "mock" &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET;
-
-if (isCloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
 
 // Multer storage configuration
 const storage = multer.diskStorage({
@@ -85,54 +70,119 @@ router.post(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      const useMock = mongoose.connection.readyState !== 1;
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const base64Data = fileBuffer.toString("base64");
+
+      let cloudinaryUrl = "";
+      let localUrl = `/uploads/${req.file.filename}`;
+      let uploadedToCloudinary = false;
+
       if (isCloudinaryConfigured) {
         try {
-          console.log(
-            `[UPLOAD] Uploading ${req.file.filename} to Cloudinary...`,
-          );
           const result = await cloudinary.uploader.upload(req.file.path, {
             folder: "portfolio",
             resource_type: "auto",
           });
-
-          // Delete temporary local file
-          try {
-            fs.unlinkSync(req.file.path);
-          } catch (err) {
-            console.warn(
-              "[UPLOAD] Failed to delete temporary local file:",
-              err.message,
-            );
-          }
-
-          console.log(
-            "[UPLOAD] Cloudinary upload successful:",
-            result.secure_url,
-          );
-          return res.json({
-            message: "File uploaded successfully to Cloudinary",
-            url: result.secure_url,
-          });
+          cloudinaryUrl = result.secure_url;
+          uploadedToCloudinary = true;
         } catch (cloudinaryError) {
-          console.error(
-            "🔴 Cloudinary upload failed, falling back to local storage:",
-            cloudinaryError.message,
-          );
+          // Cloudinary upload failed
         }
       }
 
+      // If we are in live database mode, save to MongoDB
+      if (!useMock) {
+        try {
+          const mediaItem = new Media({
+            ownerId: req.user._id,
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+            data: base64Data,
+            cloudinaryUrl: cloudinaryUrl,
+            localUrl: localUrl,
+          });
+          await mediaItem.save();
+
+          // Delete temporary local file if uploaded to Cloudinary
+          if (uploadedToCloudinary) {
+            try {
+              fs.unlinkSync(req.file.path);
+            } catch (err) {
+              // Delete temp file failed
+            }
+          }
+
+          // Return database-backed view URL
+          const mediaUrl = `/api/portfolio/media/view/${mediaItem._id}`;
+          return res.json({
+            message: "File uploaded successfully to MongoDB and Cloudinary",
+            url: mediaUrl,
+            cloudinaryUrl,
+            localUrl,
+          });
+        } catch (dbError) {
+          // MongoDB storage failed
+        }
+      }
+
+      // If mock mode or MongoDB fails, clean up local file if Cloudinary was successful
+      if (uploadedToCloudinary) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (err) {
+          // Delete temp file failed
+        }
+        return res.json({
+          message: "File uploaded successfully to Cloudinary (Mock DB fallback)",
+          url: cloudinaryUrl,
+        });
+      }
+
       // Local Fallback
-      const fileUrl = `/uploads/${req.file.filename}`;
       return res.json({
         message: "File uploaded successfully to local storage",
-        url: fileUrl,
+        url: localUrl,
       });
     } catch (error) {
-      console.error("File upload error:", error);
       return res.status(500).json({ message: "Server error during upload" });
     }
   },
 );
+
+// @route   GET /api/portfolio/media/view/:id
+// @desc    View uploaded image directly from MongoDB database
+router.get("/media/view/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const useMock = mongoose.connection.readyState !== 1;
+
+    if (useMock) {
+      return res.status(404).json({
+        message: "Database media not available in mock mode",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid media ID" });
+    }
+
+    const media = await Media.findById(id);
+    if (!media) {
+      return res.status(404).json({ message: "Media not found" });
+    }
+
+    // Decode base64 to buffer
+    const imgBuffer = Buffer.from(media.data, "base64");
+
+    // Set correct headers and send
+    res.set("Content-Type", media.contentType);
+    res.set("Cache-Control", "public, max-age=31536000"); // cache for 1 year
+    return res.send(imgBuffer);
+  } catch (error) {
+    return res.status(500).json({ message: "Error serving media" });
+  }
+});
 
 // Helper: Log visitor analytics in background
 export const logAnalytics = async (req, actionType, details = {}) => {
