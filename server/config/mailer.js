@@ -27,6 +27,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   if (brevoKey) {
     const brevoSender = process.env.BREVO_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
     try {
+      console.log('[MAILER] Attempting email dispatch via Brevo HTTP API...');
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -48,13 +49,14 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
 
       const data = await response.json();
       if (response.ok) {
+        console.log('[MAILER] Brevo HTTP API dispatch successful.');
         return { success: true, messageId: data.messageId || 'brevo-http' };
       } else {
         throw new Error(data.message || JSON.stringify(data));
       }
     } catch (apiError) {
       console.error('🔴 Brevo HTTP API email dispatch failed:', apiError.message);
-      return { success: false, error: `Brevo API Dispatch Error: ${apiError.message}` };
+      lastError = apiError;
     }
   }
 
@@ -63,6 +65,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   if (resendKey) {
     const resendSender = process.env.RESEND_SENDER_EMAIL || 'onboarding@resend.dev';
     try {
+      console.log('[MAILER] Attempting email dispatch via Resend HTTP API...');
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -81,13 +84,14 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
 
       const data = await response.json();
       if (response.ok) {
+        console.log('[MAILER] Resend HTTP API dispatch successful.');
         return { success: true, messageId: data.id || 'resend-http' };
       } else {
         throw new Error(data.message || JSON.stringify(data));
       }
     } catch (apiError) {
       console.error('🔴 Resend HTTP API email dispatch failed:', apiError.message);
-      return { success: false, error: `Resend API Dispatch Error: ${apiError.message}` };
+      lastError = apiError;
     }
   }
 
@@ -96,6 +100,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   if (sendgridKey) {
     const sendgridSender = process.env.SENDGRID_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
     try {
+      console.log('[MAILER] Attempting email dispatch via SendGrid HTTP API...');
       const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
         headers: {
@@ -120,6 +125,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       });
 
       if (response.ok) {
+        console.log('[MAILER] SendGrid HTTP API dispatch successful.');
         return { success: true, messageId: response.headers.get('x-message-id') || 'sendgrid-http' };
       } else {
         const errData = await response.json();
@@ -127,7 +133,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       }
     } catch (apiError) {
       console.error('🔴 SendGrid HTTP API email dispatch failed:', apiError.message);
-      return { success: false, error: `SendGrid API Dispatch Error: ${apiError.message}` };
+      lastError = apiError;
     }
   }
 

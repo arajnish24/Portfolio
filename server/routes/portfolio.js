@@ -14,11 +14,26 @@ import { requireAuth, requireOwner } from '../middlewares/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
 
 import { fileURLToPath } from 'url';
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Configure Cloudinary if credentials are provided and not set to 'mock'
+const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                              process.env.CLOUDINARY_CLOUD_NAME !== 'mock' && 
+                              process.env.CLOUDINARY_API_KEY && 
+                              process.env.CLOUDINARY_API_SECRET;
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
 
 // Multer storage configuration
 const storage = multer.diskStorage({
@@ -57,9 +72,36 @@ router.post('/upload', requireAuth, requireOwner, upload.single('image'), async 
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    if (isCloudinaryConfigured) {
+      try {
+        console.log(`[UPLOAD] Uploading ${req.file.filename} to Cloudinary...`);
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'portfolio',
+          resource_type: 'auto'
+        });
+
+        // Delete temporary local file
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (err) {
+          console.warn('[UPLOAD] Failed to delete temporary local file:', err.message);
+        }
+
+        console.log('[UPLOAD] Cloudinary upload successful:', result.secure_url);
+        return res.json({
+          message: 'File uploaded successfully to Cloudinary',
+          url: result.secure_url
+        });
+      } catch (cloudinaryError) {
+        console.error('🔴 Cloudinary upload failed, falling back to local storage:', cloudinaryError.message);
+      }
+    }
+
+    // Local Fallback
     const fileUrl = `/uploads/${req.file.filename}`;
     return res.json({
-      message: 'File uploaded successfully',
+      message: 'File uploaded successfully to local storage',
       url: fileUrl
     });
   } catch (error) {
