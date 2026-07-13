@@ -87,9 +87,12 @@ sequenceDiagram
 
 ### 📊 Real Analytics & Interactions
 * **Visitor Clicks & Clicks Tracker**: Records profile views, project detail clicks (`project_click` events), and resume downloads.
-* **Real Likes System**: Guests and registered users can toggle project likes directly from the home page cards or showcase details. Likes are tracked uniquely in the database based on JWT token or visitor IP address (`x-forwarded-for` / `remoteAddress`) to prevent duplicate voting.
+* **Real Likes System**: Guests and registered users can toggle project likes directly from the home page cards or showcase details. Likes are tracked uniquely in the database based on JWT token or visitor IP address to prevent duplicate voting.
 * **Analytical Recruiter Trackers**: Aggregates visitor metrics, counting profile views, resume downloads, device form factors (mobile/desktop), operating systems, and browsers.
-* **Admin Dashboard Hub**: Comprehensive dashboard to perform complete CRUD operations on projects, career milestones, educational items, certificates, and gallery events.
+* **Admin Dashboard Hub**: Comprehensive dashboard to perform complete CRUD operations on projects, career milestones, educational items, certificates, gallery events, and blog posts.
+* **Blog Management Hub**: Administrators can publish new blog posts, edit details (Markdown support, title, slug generation, custom tags, cover image upload), and remove posts.
+* **Synchronous Session Expiration**: Refreshed dashboard pages check and validate sessions synchronously on initial React render, automatically logging out active administrative sessions after 2 hours for enhanced security.
+* **Inbox Notification Sweeper**: When all contact messages are deleted from the inbox, the platform automatically purges all related notification logs from the dashboard.
 * **Anti-Spam Controls**: Throttling via API rate limiters, strict JWT verification, and email spoofing protection.
 
 ---
@@ -139,18 +142,36 @@ PORT=5000
 MONGO_URI=your_mongodb_uri_here
 JWT_SECRET=your_jwt_secret_key_here
 OTP_SECRET=your_otp_secret_key_here
-CLOUDINARY_CLOUD_NAME=mock
-CLOUDINARY_API_KEY=mock
-CLOUDINARY_API_SECRET=mock
 
-# Live SMTP Configuration (Optional)
+# Cloudinary Configs (For certificate and image uploads)
+CLOUDINARY_CLOUD_NAME=CLOUDE_NAME_HERE
+CLOUDINARY_API_KEY=   CLOUDE_API_KEY_HERE
+CLOUDINARY_API_SECRET=CLOUDE_API_SECAPI_KEY_HERE
+
+# Live SMTP Configuration (API_SECRET_onal)
 SMTP_SERVICE=gmail
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=PORT_NUMBER
 SMTP_SECURE=false
 SMTP_USER=your_email_address_here
 SMTP_PASS=your_email_app_password_here
 SMTP_FROM_NAME="Portfolio Alerts"
+
+# Live HTTP Mail relays (Recommended for Render/Heroku deployments)
+RESEND_API_KEY=your_resend_key_here
+RESEND_SENDER_EMAIL=onboarding@resend.dev
+SENDGRID_API_KEY=your_sendgrid_key_here (OPTIONAL)
+
+# Default Owner Profile Credentials
+OWNER_NAME="PREDEFINE_NAME"
+OWNER_EMAIL="PREDEFINE_EMAIL"
+OWNER_PASSWORD="PREDEFINE_PASSWORD"
+OWNER_PORTFOLIO_TOKEN="PREDEFINE_TOKEN"
+OWNER_PHONE="MOBILE_NUMBER"
+OWNER_WHATSAPP="WHATAPPS_NUMBER"
+OWNER_TELEGRAM="TELEGRAM_USER_ID"
+OWNER_LINKEDIN="LINKEDIN_USER_ID"
+OWNER_GITHUB="GITHUB_USER_ID"
 ```
 
 ### 2. Install Dependencies
@@ -216,7 +237,6 @@ To allow PDF certificate previews to render within same-origin `<iframe>` wrappe
 
 ### 5. Outbound SMTP Blocks & HTTP API Relays
 Many cloud hosting platforms (like Render, Heroku, or AWS) block standard outbound SMTP ports (465/587) or Google's SMTP endpoints to prevent spam. If you experience a `Connection timeout` error, you can completely bypass SMTP by configuring one of the following supported HTTP-based email APIs:
-* **Brevo (formerly Sendinblue)**: Add `BREVO_API_KEY` to your environment variables.
 * **Resend**: Add `RESEND_API_KEY` to your environment variables.
 * **SendGrid**: Add `SENDGRID_API_KEY` to your environment variables.
 If any of these API keys are present in the environment variables, the platform's email dispatcher ([mailer.js](file:///D:/Code/Portfolio2/server/config/mailer.js)) automatically redirects the mail via standard secure HTTPS port 443 (which is never blocked), avoiding connection timeouts.
