@@ -8,7 +8,7 @@
 }
 
 body {
-  font-family: 'Inter', 'Outfit', sans-serif;
+  font-family: "Inter", "Outfit", sans-serif;
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
@@ -46,28 +46,38 @@ body {
 /* Premium Neumorphism Elements */
 .neo-card {
   background: #111827;
-  box-shadow: 5px 5px 15px #070a10, -5px -5px 15px #1b263e;
+  box-shadow:
+    5px 5px 15px #070a10,
+    -5px -5px 15px #1b263e;
   border-radius: 20px;
 }
 
 .neo-inset {
   background: #0f172a;
-  box-shadow: inset 3px 3px 6px #05080f, inset -3px -3px 6px #192645;
+  box-shadow:
+    inset 3px 3px 6px #05080f,
+    inset -3px -3px 6px #192645;
 }
 
 /* Animated backgrounds */
 .bg-grid-mesh {
   background-size: 60px 60px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
 }
 
 /* Float Keyframes */
 @keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
 }
 
 .animate-premium-float {

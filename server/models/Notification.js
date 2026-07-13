@@ -1,13 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const NotificationSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  type: { 
-    type: String, 
-    enum: ['message', 'like', 'view', 'download', 'system'], 
-    default: 'system' 
+const NotificationSchema = new mongoose.Schema(
+  {
+    text: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ["message", "like", "view", "download", "system"],
+      default: "system",
+    },
+    isRead: { type: Boolean, default: false },
   },
-  isRead: { type: Boolean, default: false }
-}, { timestamps: true });
+  { timestamps: true },
+);
 
-export default mongoose.model('Notification', NotificationSchema);
+export default mongoose.model("Notification", NotificationSchema);

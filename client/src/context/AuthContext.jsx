@@ -1,36 +1,80 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [theme, setThemeState] = useState('dark');
+  const [token, setToken] = useState(() => {
+    const storedToken = localStorage.getItem("token");
+    const loginTimeStr = localStorage.getItem("login_timestamp");
+    if (storedToken && loginTimeStr) {
+      const loginTime = parseInt(loginTimeStr, 10);
+      const elapsedHours = (Date.now() - loginTime) / (1000 * 60 * 60);
+      if (elapsedHours >= 2) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("login_timestamp");
+        return null;
+      }
+      return storedToken;
+    }
+    return null;
+  });
 
-  useEffect(() => {
-    // Load authentication credentials
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      if (parsedUser.themeSettings?.theme) {
-        setThemeState(parsedUser.themeSettings.theme);
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    const loginTimeStr = localStorage.getItem("login_timestamp");
+    if (storedUser && loginTimeStr) {
+      const loginTime = parseInt(loginTimeStr, 10);
+      const elapsedHours = (Date.now() - loginTime) / (1000 * 60 * 60);
+      if (elapsedHours >= 2) {
+        return null;
+      }
+      try {
+        return JSON.parse(storedUser);
+      } catch (e) {
+        return null;
       }
     }
-    setLoading(false);
+    return null;
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const [theme, setThemeState] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        return parsed.themeSettings?.theme || "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+    return "dark";
+  });
+
+  useEffect(() => {
+    // If state is mismatched or corrupted, clean it up
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if ((storedToken && !storedUser) || (!storedToken && storedUser)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("login_timestamp");
+      setToken(null);
+      setUser(null);
+    }
   }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark', 'glassmorphism');
+    root.classList.remove("light", "dark", "glassmorphism");
 
-    if (theme === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.add(prefersDark ? 'dark' : 'light');
+    if (theme === "system") {
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      root.classList.add(prefersDark ? "dark" : "light");
     } else {
       root.classList.add(theme);
     }
@@ -39,8 +83,9 @@ export const AuthProvider = ({ children }) => {
   const login = (newToken, newUser) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.setItem("login_timestamp", Date.now().toString());
     if (newUser.themeSettings?.theme) {
       setThemeState(newUser.themeSettings.theme);
     }
@@ -49,15 +94,16 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("login_timestamp");
   };
 
   const updateUser = (updatedUser) => {
     if (user) {
       const mergedUser = { ...user, ...updatedUser };
       setUser(mergedUser);
-      localStorage.setItem('user', JSON.stringify(mergedUser));
+      localStorage.setItem("user", JSON.stringify(mergedUser));
       if (updatedUser.themeSettings?.theme) {
         setThemeState(updatedUser.themeSettings.theme);
       }
@@ -68,25 +114,36 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       const updated = { ...user, themeSettings: newSettings };
       setUser(updated);
-      localStorage.setItem('user', JSON.stringify(updated));
+      localStorage.setItem("user", JSON.stringify(updated));
       setThemeState(newSettings.theme);
 
       // Call API in background
       if (token) {
-        fetch('/api/portfolio/appearance', {
-          method: 'PUT',
+        fetch("/api/portfolio/appearance", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(newSettings)
-        }).catch(err => console.error('Failed to sync theme:', err));
+          body: JSON.stringify(newSettings),
+        }).catch((err) => console.error("Failed to sync theme:", err));
       }
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, theme, syncTheme }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        logout,
+        updateUser,
+        theme,
+        syncTheme,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -95,7 +152,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

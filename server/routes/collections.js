@@ -530,4 +530,40 @@ router.put('/gallery/:id', requireAuth, requireOwner, async (req, res) => {
   }
 });
 
+// Edit Blog
+router.put('/blogs/:id', requireAuth, requireOwner, async (req, res) => {
+  const { title, slug, content, coverImage, category, tags, status } = req.body;
+  try {
+    const isMock = checkDbMode();
+    const updateData = { 
+      title, 
+      slug, 
+      content, 
+      coverImage, 
+      category: category || 'Technology', 
+      tags: tags || [], 
+      status: status || 'published',
+      readingTime: content ? `${Math.max(1, Math.round(content.split(' ').length / 200))} min read` : '5 min read'
+    };
+    let updated;
+    if (isMock) {
+      const items = mockDbHelper.getCollection('blogs');
+      const itemIdx = items.findIndex(x => x._id === req.params.id);
+      if (itemIdx !== -1) {
+        items[itemIdx] = { ...items[itemIdx], ...updateData };
+        const db = mockDbHelper.readDb();
+        db.blogs = items;
+        mockDbHelper.writeDb(db);
+        updated = items[itemIdx];
+      }
+    } else {
+      updated = await Blog.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
+    }
+    if (!updated) return res.status(404).json({ message: 'Blog post not found' });
+    return res.json({ message: 'Blog post updated successfully', blog: updated });
+  } catch (err) {
+    return res.status(500).json({ message: 'Error updating blog post' });
+  }
+});
+
 export default router;

@@ -1,22 +1,24 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import Message from '../models/Message.js';
-import Notification from '../models/Notification.js';
-import User from '../models/User.js';
-import { mockDbHelper } from '../config/mockDb.js';
-import { requireAuth, requireOwner } from '../middlewares/authMiddleware.js';
-import { sendEmail } from '../config/mailer.js';
+import express from "express";
+import mongoose from "mongoose";
+import Message from "../models/Message.js";
+import Notification from "../models/Notification.js";
+import User from "../models/User.js";
+import { mockDbHelper } from "../config/mockDb.js";
+import { requireAuth, requireOwner } from "../middlewares/authMiddleware.js";
+import { sendEmail } from "../config/mailer.js";
 
 const router = express.Router();
 const checkDbMode = () => mongoose.connection.readyState !== 1;
 
 // @route   POST /api/messages
 // @desc    Submit contact form message (Visitor)
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
 
   if (!name || !email || !message) {
-    return res.status(400).json({ message: 'Name, email, and message content are required' });
+    return res
+      .status(400)
+      .json({ message: "Name, email, and message content are required" });
   }
 
   try {
@@ -24,28 +26,29 @@ router.post('/', async (req, res) => {
     const messageData = {
       name,
       email,
-      phone: phone || '',
-      subject: subject || 'General Inquiry',
+      phone: phone || "",
+      subject: subject || "General Inquiry",
       message,
       isRead: false,
       isStarred: false,
-      replyContent: ''
+      replyContent: "",
     };
 
-    const snippet = message.length > 60 ? message.substring(0, 60) + '...' : message;
+    const snippet =
+      message.length > 60 ? message.substring(0, 60) + "..." : message;
     const notificationText = `New message from ${name}: "${snippet}"`;
 
     let savedMessage;
     if (isMock) {
-      messageData._id = 'm_' + Math.random().toString(36).substr(2, 9);
-      savedMessage = mockDbHelper.saveToCollection('messages', messageData);
-      
+      messageData._id = "m_" + Math.random().toString(36).substr(2, 9);
+      savedMessage = mockDbHelper.saveToCollection("messages", messageData);
+
       // Save notification in dashboard
-      mockDbHelper.saveToCollection('notifications', {
+      mockDbHelper.saveToCollection("notifications", {
         text: notificationText,
-        type: 'message',
+        type: "message",
         isRead: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     } else {
       savedMessage = new Message(messageData);
@@ -54,84 +57,83 @@ router.post('/', async (req, res) => {
       // Create Mongoose notification
       await new Notification({
         text: notificationText,
-        type: 'message'
+        type: "message",
       }).save();
     }
 
     // Fetch owner's email address from database for notification
-    let ownerEmail = 'owner@portfolio.com';
+    let ownerEmail = "owner@portfolio.com";
     try {
-      const ownerUser = isMock 
-        ? mockDbHelper.getCollection('users').find(u => u.role === 'Owner')
-        : await User.findOne({ role: 'Owner' });
+      const ownerUser = isMock
+        ? mockDbHelper.getCollection("users").find((u) => u.role === "Owner")
+        : await User.findOne({ role: "Owner" });
       if (ownerUser && ownerUser.email) {
         ownerEmail = ownerUser.email;
       }
     } catch (e) {
-      console.warn('Could not retrieve owner email for alert:', e);
+      console.warn("Could not retrieve owner email for alert:", e);
     }
 
     // Trigger Nodemailer dispatch
     const mailResult = await sendEmail({
       to: ownerEmail,
-      fromName: 'Portfolio Alerts',
+      fromName: "Portfolio Alerts",
       replyTo: email,
-      subject: `[Portfolio Alert] Message from ${name}: ${subject || 'General Inquiry'}`,
+      subject: `[Portfolio Alert] Message from ${name}: ${subject || "General Inquiry"}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff;">
           <h2 style="color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-top: 0;">New Message from Portfolio Website</h2>
           <p style="margin: 10px 0;"><strong>Sender Name:</strong> ${name}</p>
           <p style="margin: 10px 0;"><strong>Sender Email:</strong> ${email}</p>
-          <p style="margin: 10px 0;"><strong>Phone:</strong> ${phone || 'N/A'}</p>
-          <p style="margin: 10px 0;"><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
+          <p style="margin: 10px 0;"><strong>Phone:</strong> ${phone || "N/A"}</p>
+          <p style="margin: 10px 0;"><strong>Subject:</strong> ${subject || "General Inquiry"}</p>
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #3b82f6;">
             <p style="white-space: pre-wrap; margin: 0; font-size: 13px; line-height: 1.5; color: #444;">${message}</p>
           </div>
           <p style="font-size: 10px; color: #888; margin-top: 25px; border-top: 1px solid #eee; padding-top: 10px;">This alert was automatically generated by Portfolio secure platform.</p>
         </div>
-      `
+      `,
     });
 
     if (mailResult && mailResult.success === false) {
       return res.status(500).json({
-        message: `Failed to send email alert: ${mailResult.error}`
+        message: `Failed to send email alert: ${mailResult.error}`,
       });
     }
 
     return res.status(201).json({
-      message: 'Message submitted successfully. Notifications sent.',
-      contactMessage: savedMessage
+      message: "Message submitted successfully. Notifications sent.",
+      contactMessage: savedMessage,
     });
-
   } catch (error) {
-    console.error('Submit message error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Submit message error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
 // @route   GET /api/messages
 // @desc    Get all messages (Owner)
-router.get('/', requireAuth, requireOwner, async (req, res) => {
+router.get("/", requireAuth, requireOwner, async (req, res) => {
   try {
     const isMock = checkDbMode();
     let messages = [];
 
     if (isMock) {
-      messages = mockDbHelper.getCollection('messages');
+      messages = mockDbHelper.getCollection("messages");
     } else {
       messages = await Message.find().sort({ createdAt: -1 });
     }
 
     return res.json({ messages });
   } catch (error) {
-    console.error('Fetch messages error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Fetch messages error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
 // @route   PUT /api/messages/:id
 // @desc    Update read/starred state or reply
-router.put('/:id', requireAuth, requireOwner, async (req, res) => {
+router.put("/:id", requireAuth, requireOwner, async (req, res) => {
   const { isRead, isStarred, replyContent } = req.body;
 
   try {
@@ -139,14 +141,14 @@ router.put('/:id', requireAuth, requireOwner, async (req, res) => {
     let message;
 
     if (isMock) {
-      const messages = mockDbHelper.getCollection('messages');
-      message = messages.find(m => m._id === req.params.id);
+      const messages = mockDbHelper.getCollection("messages");
+      message = messages.find((m) => m._id === req.params.id);
     } else {
       message = await Message.findById(req.params.id);
     }
 
     if (!message) {
-      return res.status(404).json({ message: 'Message not found' });
+      return res.status(404).json({ message: "Message not found" });
     }
 
     if (isRead !== undefined) message.isRead = isRead;
@@ -154,48 +156,75 @@ router.put('/:id', requireAuth, requireOwner, async (req, res) => {
     if (replyContent !== undefined) {
       message.replyContent = replyContent;
       message.repliedAt = new Date().toISOString();
-      
-      console.log(`\n================= EMAIL DISPATCH SIMULATOR =================`);
+
+      console.log(
+        `\n================= EMAIL DISPATCH SIMULATOR =================`,
+      );
       console.log(`[TO VISITOR] Reply sent to ${message.email} successfully!`);
       console.log(`Content: "${replyContent}"`);
-      console.log(`============================================================\n`);
+      console.log(
+        `============================================================\n`,
+      );
     }
 
     if (isMock) {
-      mockDbHelper.saveToCollection('messages', message);
+      mockDbHelper.saveToCollection("messages", message);
     } else {
       await message.save();
     }
 
-    return res.json({ message: 'Message state updated', contactMessage: message });
-
+    return res.json({
+      message: "Message state updated",
+      contactMessage: message,
+    });
   } catch (error) {
-    console.error('Update message error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Update message error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
 // @route   DELETE /api/messages/:id
 // @desc    Remove message
-router.delete('/:id', requireAuth, requireOwner, async (req, res) => {
+router.delete("/:id", requireAuth, requireOwner, async (req, res) => {
   try {
     const isMock = checkDbMode();
     let success = false;
 
     if (isMock) {
-      success = mockDbHelper.deleteFromCollection('messages', req.params.id);
+      success = mockDbHelper.deleteFromCollection("messages", req.params.id);
     } else {
       const deleted = await Message.findByIdAndDelete(req.params.id);
       success = !!deleted;
     }
 
     if (!success) {
-      return res.status(404).json({ message: 'Message not found' });
+      return res.status(404).json({ message: "Message not found" });
     }
 
-    return res.json({ message: 'Message deleted successfully' });
+    // Clean up notifications of type 'message' if all messages are deleted
+    let remainingMessages = [];
+    if (isMock) {
+      remainingMessages = mockDbHelper.getCollection("messages");
+    } else {
+      remainingMessages = await Message.find();
+    }
+
+    if (remainingMessages.length === 0) {
+      if (isMock) {
+        const db = mockDbHelper.readDb();
+        db.notifications = (db.notifications || []).filter(
+          (n) => n.type !== "message",
+        );
+        mockDbHelper.writeDb(db);
+      } else {
+        await Notification.deleteMany({ type: "message" });
+      }
+    }
+
+    return res.json({ message: "Message deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Delete message error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 

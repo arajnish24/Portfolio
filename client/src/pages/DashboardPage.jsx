@@ -90,6 +90,10 @@ const DashboardPage = () => {
   const [certForm, setCertForm] = useState({ title: '', organization: '', date: '', verificationLink: '', image: '' });
   const [editingCertId, setEditingCertId] = useState(null);
 
+  // Blogs
+  const [blogForm, setBlogForm] = useState({ title: '', slug: '', content: '', coverImage: '', category: 'Technology', tags: '', status: 'published' });
+  const [editingBlogId, setEditingBlogId] = useState(null);
+
   const [isCopied, setIsCopied] = useState(false);
 
   // Fetch all collections on mount
@@ -636,13 +640,13 @@ const DashboardPage = () => {
                   <button onClick={handleMarkNotificationsRead} className="text-[10px] text-blue-400 font-bold hover:underline">Mark all read</button>
                 </div>
                 <div className="space-y-2.5 max-h-60 overflow-y-auto">
-                  {notifications.map((n) => (
+                  {(messages.length === 0 ? notifications.filter(n => n.type !== 'message') : notifications).map((n) => (
                     <div key={n._id} className="text-xs flex items-start gap-2 border-b border-slate-900/60 pb-2 last:border-b-0">
                       <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.isRead ? 'bg-slate-800' : 'bg-blue-500'}`} />
                       <p className="text-slate-300">{n.text}</p>
                     </div>
                   ))}
-                  {notifications.length === 0 && <p className="text-xs text-slate-500 italic">No notifications yet.</p>}
+                  {(messages.length === 0 ? notifications.filter(n => n.type !== 'message') : notifications).length === 0 && <p className="text-xs text-slate-500 italic">No notifications yet.</p>}
                 </div>
               </div>
 
@@ -1005,26 +1009,46 @@ const DashboardPage = () => {
                       </div>
                     )}
 
-                    {isOwner && !m.replyContent && (
-                      <button
-                        onClick={() => {
-                          const rep = prompt('Type simulated reply contents:');
-                          if (rep) {
-                            fetch(`/api/messages/${m._id}`, {
-                              method: 'PUT',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                              },
-                              body: JSON.stringify({ replyContent: rep })
-                            }).then(() => refreshDashboardData()).catch(err => console.warn(err));
-                          }
-                        }}
-                        className="bg-slate-950 hover:bg-slate-900 text-blue-400 border border-slate-900 hover:border-slate-850 px-3 py-1.5 rounded-lg font-bold text-[10px] mt-2 block"
-                      >
-                        Reply Message
-                      </button>
-                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {isOwner && !m.replyContent && (
+                        <button
+                          onClick={() => {
+                            const rep = prompt('Type simulated reply contents:');
+                            if (rep) {
+                              fetch(`/api/messages/${m._id}`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ replyContent: rep })
+                              }).then(() => refreshDashboardData()).catch(err => console.warn(err));
+                            }
+                          }}
+                          className="bg-slate-950 hover:bg-slate-900 text-blue-400 border border-slate-900 hover:border-slate-850 px-3 py-1.5 rounded-lg font-bold text-[10px] cursor-pointer"
+                        >
+                          Reply Message
+                        </button>
+                      )}
+                      {isOwner && (
+                        <button
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this message?')) {
+                              fetch(`/api/messages/${m._id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`
+                                }
+                              }).then(() => refreshDashboardData()).catch(err => console.warn(err));
+                            }
+                          }}
+                          className="bg-slate-950 hover:bg-rose-950/30 text-rose-400 border border-slate-900 hover:border-rose-900/50 px-3 py-1.5 rounded-lg font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span>Delete</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
                 {messages.length === 0 && <p className="text-xs text-slate-500 italic py-6 text-center">No messages received.</p>}
@@ -1131,6 +1155,12 @@ const DashboardPage = () => {
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${contentSubTab === 'certificates' ? 'bg-blue-600 text-white' : 'bg-slate-950 border border-slate-900 text-slate-400 hover:text-white'}`}
                 >
                   Certifications
+                </button>
+                <button
+                  onClick={() => { setContentSubTab('blogs'); setContentMsg(''); }}
+                  className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${contentSubTab === 'blogs' ? 'bg-blue-600 text-white' : 'bg-slate-950 border border-slate-900 text-slate-400 hover:text-white'}`}
+                >
+                  Blog Posts
                 </button>
               </div>
 
@@ -1879,6 +1909,203 @@ const DashboardPage = () => {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. BLOGS MANAGER SUB-TAB */}
+              {contentSubTab === 'blogs' && (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Blog Form */}
+                  {isOwner && (
+                    <form
+                      onSubmit={(e) => {
+                        const submissionBody = {
+                          ...blogForm,
+                          tags: typeof blogForm.tags === 'string'
+                            ? blogForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+                            : blogForm.tags
+                        };
+                        handleCollectionSubmit(e, 'blogs', editingBlogId, submissionBody, () => {
+                          setBlogForm({ title: '', slug: '', content: '', coverImage: '', category: 'Technology', tags: '', status: 'published' });
+                          setEditingBlogId(null);
+                        });
+                      }}
+                      className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 md:col-span-1 h-fit text-xs"
+                    >
+                      <h4 className="font-extrabold text-sm text-white">
+                        {editingBlogId ? 'Edit Blog Post' : 'Add Blog Post'}
+                      </h4>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Blog Title</label>
+                        <input
+                          type="text"
+                          value={blogForm.title}
+                          onChange={(e) => {
+                            const newTitle = e.target.value;
+                            const newSlug = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                            setBlogForm({ ...blogForm, title: newTitle, slug: newSlug });
+                          }}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none"
+                          placeholder="e.g. My Coding Journey"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Slug (Auto-generated)</label>
+                        <input
+                          type="text"
+                          value={blogForm.slug}
+                          onChange={(e) => setBlogForm({ ...blogForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none font-mono text-[10px]"
+                          placeholder="my-coding-journey"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Category</label>
+                        <input
+                          type="text"
+                          value={blogForm.category}
+                          onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none"
+                          placeholder="e.g. Technology, Personal"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Tags (Comma-separated)</label>
+                        <input
+                          type="text"
+                          value={blogForm.tags}
+                          onChange={(e) => setBlogForm({ ...blogForm, tags: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none"
+                          placeholder="e.g. react, webdev, node"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-slate-400 font-bold block">Cover Image URL</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={blogForm.coverImage}
+                            onChange={(e) => setBlogForm({ ...blogForm, coverImage: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none text-[10px] font-mono"
+                            placeholder="http://..."
+                          />
+                          <input
+                            type="file"
+                            id="blog-file-upload"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              await handleFileUpload(file, (url) => {
+                                setBlogForm({ ...blogForm, coverImage: url });
+                              });
+                            }}
+                          />
+                          <label
+                            htmlFor="blog-file-upload"
+                            className="bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold py-2.5 px-3.5 rounded-xl cursor-pointer flex items-center justify-center shrink-0"
+                          >
+                            Upload
+                          </label>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Status</label>
+                        <select
+                          value={blogForm.status}
+                          onChange={(e) => setBlogForm({ ...blogForm, status: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none"
+                        >
+                          <option value="published">Published</option>
+                          <option value="draft">Draft</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold block">Content (Markdown supported)</label>
+                        <textarea
+                          value={blogForm.content}
+                          onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
+                          rows={6}
+                          className="w-full bg-slate-950 border border-slate-850 rounded-xl py-2.5 px-3 text-white focus:outline-none font-mono"
+                          placeholder="Write your markdown post content here..."
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl flex-1 cursor-pointer"
+                        >
+                          {editingBlogId ? 'Save Changes' : 'Publish Post'}
+                        </button>
+                        {editingBlogId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBlogForm({ title: '', slug: '', content: '', coverImage: '', category: 'Technology', tags: '', status: 'published' });
+                              setEditingBlogId(null);
+                            }}
+                            className="bg-slate-900 border border-slate-800 text-slate-400 py-2.5 px-4 rounded-xl cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Blogs Directory */}
+                  <div className={`glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 ${isOwner ? 'md:col-span-2' : 'md:col-span-3'}`}>
+                    <h4 className="font-extrabold text-sm text-white">Blogs Directory ({blogs.length})</h4>
+                    <div className="grid sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 text-xs">
+                      {blogs.map((b) => (
+                        <div key={b._id} className="bg-slate-950/60 border border-slate-900 p-4 rounded-2xl flex items-start gap-4">
+                          <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                            {b.coverImage ? (
+                              <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <BookOpen className="h-6 w-6 text-slate-650" />
+                            )}
+                          </div>
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <h5 className="font-extrabold text-xs text-white truncate">{b.title}</h5>
+                            <p className="text-[10px] text-blue-400 font-semibold">{b.category} <span className="text-slate-600">• {b.status}</span></p>
+                            <p className="text-[9px] text-slate-500 font-mono truncate">/{b.slug}</p>
+                          </div>
+                          {isOwner && (
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditingBlogId(b._id);
+                                  setBlogForm({
+                                    title: b.title || '',
+                                    slug: b.slug || '',
+                                    content: b.content || '',
+                                    coverImage: b.coverImage || '',
+                                    category: b.category || 'Technology',
+                                    tags: Array.isArray(b.tags) ? b.tags.join(', ') : '',
+                                    status: b.status || 'published'
+                                  });
+                                }}
+                                className="p-1.5 bg-blue-950/40 hover:bg-blue-900 border border-blue-900/60 text-blue-300 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => handleCollectionDelete('blogs', b._id)}
+                                className="p-1.5 bg-rose-950/40 hover:bg-rose-900 border border-rose-900/60 text-rose-300 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {blogs.length === 0 && <p className="text-xs text-slate-500 italic py-6 col-span-2 text-center">No blog posts found.</p>}
                     </div>
                   </div>
                 </div>

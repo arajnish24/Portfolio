@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, LogIn, LayoutDashboard, Menu, X, Sun, Moon } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  ShieldAlert,
+  LogIn,
+  LayoutDashboard,
+  Menu,
+  X,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 const Navbar = () => {
   const { user, theme, syncTheme } = useAuth();
@@ -9,36 +17,39 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hide header on printing
-  if (location.pathname.includes('/print-cv')) return null;
+  if (location.pathname.includes("/print-cv")) return null;
 
   const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    const nextTheme = theme === "dark" ? "light" : "dark";
     syncTheme({
       theme: nextTheme,
-      accentColor: user?.themeSettings?.accentColor || '#3b82f6',
-      fontFamily: user?.themeSettings?.fontFamily || 'Inter',
-      layout: user?.themeSettings?.layout || 'glass',
-      animationsEnabled: user?.themeSettings?.animationsEnabled !== false
+      accentColor: user?.themeSettings?.accentColor || "#3b82f6",
+      fontFamily: user?.themeSettings?.fontFamily || "Inter",
+      layout: user?.themeSettings?.layout || "glass",
+      animationsEnabled: user?.themeSettings?.animationsEnabled !== false,
     });
   };
 
   const navLinks = [
-    { label: 'About', path: '/#about' },
-    { label: 'Skills', path: '/#skills' },
-    { label: 'Certificates', path: '/#certificates' },
-    { label: 'Projects', path: '/#projects' },
-    { label: 'Gallery', path: '/#gallery' },
-    { label: 'Blog', path: '/blogs' },
-    { label: 'Contact', path: '/#contact' }
+    { label: "About", path: "/#about" },
+    { label: "Skills", path: "/#skills" },
+    { label: "Certificates", path: "/#certificates" },
+    { label: "Projects", path: "/#projects" },
+    { label: "Gallery", path: "/#gallery" },
+    { label: "Blog", path: "/blogs" },
+    { label: "Contact", path: "/#contact" },
   ];
 
   return (
     <header className="sticky top-0 z-50 glass-nav shadow-lg">
       <div className="container mx-auto px-6 py-4 max-w-7xl flex items-center justify-between">
-        
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain rounded-xl shadow-md group-hover:scale-105 transition-transform" />
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="w-10 h-10 object-contain rounded-xl shadow-md group-hover:scale-105 transition-transform"
+          />
           <span className="font-extrabold text-lg tracking-wider bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all">
             PORTFOLIO
           </span>
@@ -47,7 +58,7 @@ const Navbar = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a 
+            <a
               key={link.label}
               href={link.path}
               className="text-xs font-semibold text-slate-300 hover:text-white transition-colors"
@@ -59,14 +70,17 @@ const Navbar = () => {
 
         {/* Header Controls */}
         <div className="hidden lg:flex items-center gap-4">
-          
           {/* Theme Toggle */}
-          <button 
+          <button
             onClick={toggleTheme}
             className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:border-slate-700 transition-all"
             title="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
 
           {/* User Button */}
@@ -79,7 +93,7 @@ const Navbar = () => {
                 <LayoutDashboard className="h-4 w-4" />
                 <span>Dashboard</span>
               </Link>
-              {user.role === 'Owner' && (
+              {user.role === "Owner" && (
                 <span className="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-inner">
                   ✔ Owner
                 </span>
@@ -94,25 +108,31 @@ const Navbar = () => {
               <span>Sign In</span>
             </Link>
           )}
-
         </div>
 
         {/* Mobile menu trigger */}
         <div className="lg:hidden flex items-center gap-3">
-          <button 
+          <button
             onClick={toggleTheme}
             className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400"
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
-
       </div>
 
       {/* Mobile menu drawer overlay */}
@@ -120,7 +140,7 @@ const Navbar = () => {
         <div className="lg:hidden border-t border-slate-900 bg-slate-950/95 py-6 px-6 space-y-4 shadow-xl">
           <nav className="flex flex-col gap-4">
             {navLinks.map((link) => (
-              <a 
+              <a
                 key={link.label}
                 href={link.path}
                 onClick={() => setMobileMenuOpen(false)}

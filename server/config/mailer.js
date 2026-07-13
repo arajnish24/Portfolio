@@ -12,15 +12,16 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   const maskSensitiveData = (content) => {
     if (!content) return content;
     let sanitized = String(content);
-    // Mask Portfolio Verification Token e.g., PX-8453-9452-ABCD anywhere in the text
-    sanitized = sanitized.replace(/PX-\d{4}-\d{4}-[A-Z0-9]{4}/gi, 'PX-XXXX-XXXX-XXXX');
+    // Mask Portfolio Verification Token anywhere in the text
+    sanitized = sanitized.replace(/PX-\d{4}-\d{4}-[A-Z0-9]{4}/gi, '[HIDDEN]');
     // Mask any standalone 6-digit OTP codes
     sanitized = sanitized.replace(/\b\d{6}\b/g, '[HIDDEN]');
     return sanitized;
   };
 
   // Determine final recipient
-  const recipient = (to && to.trim().toLowerCase() === 'owner@portfolio.com' || !to) ? (smtpUser || 'owner@portfolio.com') : to;
+  const defaultOwnerEmail = (process.env.OWNER_EMAIL).trim().toLowerCase();
+  const recipient = (to && to.trim().toLowerCase() === defaultOwnerEmail || !to) ? (smtpUser || defaultOwnerEmail) : to;
 
   // ==========================================
   // HTTP EMAIL PROVIDERS FALLBACK (BYPASSES SMTP TIMEOUTS IN PRODUCTION)
@@ -29,7 +30,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // 2. Resend HTTP API
   const resendKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
   if (resendKey) {
-    const resendSender = process.env.RESEND_SENDER_EMAIL || 'onboarding@resend.dev';
+    const resendSender = process.env.RESEND_SENDER_EMAIL;
     try {
       console.log('[MAILER] Attempting email dispatch via Resend HTTP API...');
       const response = await fetch('https://api.resend.com/emails', {
@@ -64,7 +65,7 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
   // 3. SendGrid HTTP API
   const sendgridKey = process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.trim() : null;
   if (sendgridKey) {
-    const sendgridSender = process.env.SENDGRID_SENDER_EMAIL || smtpUser || 'no-reply@portfolio.com';
+    const sendgridSender = process.env.SENDGRID_SENDER_EMAIL || smtpUser;
     try {
       console.log('[MAILER] Attempting email dispatch via SendGrid HTTP API...');
       const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
@@ -181,11 +182,11 @@ export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) 
       console.log('[MAILER] SMTP email sent successfully. Message ID:', info.messageId);
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error(`🔴 [MAILER] SMTP connection/auth failure (Host: ${transportConfig.host || transportConfig.service || 'default'}, Port: ${transportConfig.port || 'default'}):`, error);
+      console.error(`🔴 [MAILER] SMTP connection/auth failure (Host: ${transportConfig.host || transportConfig.service || 'default'}, Port: ${transportConfig.port || 'default'}):`, error.message || error);
       lastError = error;
     }
   }
 
-  console.error(`🔴 All Nodemailer transport configurations failed to send email to ${recipient}:`, lastError);
+  console.error(`🔴 All Nodemailer transport configurations failed to send email to ${recipient}:`, lastError ? lastError.message : 'Connection timeout');
   return { success: false, error: lastError ? lastError.message : 'Connection timeout' };
 };

@@ -1,9 +1,13 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FILE_PATH = path.join(__dirname, '../data/db_fallback.json');
+const FILE_PATH = path.join(__dirname, "../data/db_fallback.json");
 
 const ensureDirectoryExists = () => {
   const dir = path.dirname(FILE_PATH);
@@ -13,44 +17,49 @@ const ensureDirectoryExists = () => {
 };
 
 const getSeedData = () => {
-  const ownerId = 'o_owner';
-  
-  // Bcrypt hash for password: 'password123'
-  const hashedPassword = '$2a$10$Uv0t8QzP8lZ9xQ29.3QW/uP5C58N.qV1b5Z2Y.mP9J3GvFj.2U12a';
+  const ownerId = "o_owner";
+
+  // Dynamic Bcrypt hash for OWNER_PASSWORD
+  const plainPassword = process.env.OWNER_PASSWORD;
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = plainPassword ? bcrypt.hashSync(plainPassword, salt) : "";
 
   const defaultOwner = {
     _id: ownerId,
-    name: "Anmol Rajnish",
-    email: "owner@portfolio.com",
+    name: process.env.OWNER_NAME,
+    email: process.env.OWNER_EMAIL,
     password: hashedPassword,
     role: "Owner",
     isVerified: true,
-    portfolioToken: "PX-8453-9452-ABCD", // Portfolio Verification Token
-    profession: "Senior Full Stack & Identity Security Architect",
-    bio: "Lead Developer specializing in high-security MERN stack architectures, client-server verification systems, and cloud databases. Focused on delivering premium, modern web applications with seamless UX/UI transitions.",
+    portfolioToken: process.env.OWNER_PORTFOLIO_TOKEN, // Portfolio Verification Token
+    profession: process.env.OWNER_PROFESSION,
+    bio: process.env.OWNER_BIO,
     profileImage: "/AR.jpg",
     resumeUrl: "/Updated_Resume.pdf",
-    location: "Mumbai, India",
+    location: process.env.OWNER_LOCATION,
     contactDetails: {
-      phone: "+91 9876543210",
-      whatsapp: "+919876543210",
-      telegram: "anmol_rajnish",
-      linkedin: "anmol-rajnish",
-      github: "anmol-rajnish"
+      phone: process.env.OWNER_PHONE,
+      whatsapp: process.env.OWNER_WHATSAPP,
+      telegram: process.env.OWNER_TELEGRAM,
+      linkedin: process.env.OWNER_LINKEDIN,
+      github: process.env.OWNER_GITHUB,
     },
     seo: {
-      title: "Anmol Rajnish | Senior Full Stack Architect Portfolio",
-      description: "Explore the secure portfolio and projects of Anmol Rajnish, showcasing MERN stack expertise and DevSecOps engineering.",
-      keywords: "React, Node, Express, MongoDB, Security, TailwindCSS, JWT, Portfolios",
-      ogImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800"
+      title: `${process.env.OWNER_NAME} | Senior Full Stack Architect Portfolio`,
+      description:
+        `Explore the secure portfolio and projects of ${process.env.OWNER_NAME}, showcasing MERN stack expertise and DevSecOps engineering.`,
+      keywords:
+        "React, Node, Express, MongoDB, Security, TailwindCSS, JWT, Portfolios",
+      ogImage:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800",
     },
     themeSettings: {
       theme: "dark",
       accentColor: "#3b82f6",
       fontFamily: "Inter",
       layout: "glass",
-      animationsEnabled: true
-    }
+      animationsEnabled: true,
+    },
   };
 
   const defaultProjects = [
@@ -58,15 +67,29 @@ const getSeedData = () => {
       _id: "p_portfolio",
       ownerId: ownerId,
       title: "Portfolio Platform",
-      description: "A production-ready secure MERN portfolio system with dual-key token restrictions, resilient database failovers, and embedded recruiter analytics trackers.",
-      technologies: ["React", "Express.js", "Node.js", "MongoDB", "Tailwind CSS"],
+      description:
+        "A production-ready secure MERN portfolio system with dual-key token restrictions, resilient database failovers, and embedded recruiter analytics trackers.",
+      technologies: [
+        "React",
+        "Express.js",
+        "Node.js",
+        "MongoDB",
+        "Tailwind CSS",
+      ],
       github: "https://github.com/arajnish24/portfolio",
       live: "https://portfolio-demo.com",
       playStore: "",
       appStore: "",
-      images: ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600"],
+      images: [
+        "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600",
+      ],
       video: "",
-      features: ["Token verification", "Dynamic metrics dashboard", "Email alerts Integration", "Responsive grid layout"],
+      features: [
+        "Token verification",
+        "Dynamic metrics dashboard",
+        "Email alerts Integration",
+        "Responsive grid layout",
+      ],
       duration: "3 months",
       status: "published",
       teamSize: 1,
@@ -80,21 +103,34 @@ const getSeedData = () => {
       isPinned: true,
       isHidden: false,
       isFeatured: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     },
     {
       _id: "p_cloudstore",
       ownerId: ownerId,
       title: "CloudStore Microservice Gateway",
-      description: "High-performance API gateway resolving client queries, compression rules, rate limit filters, and routing mappings across AWS instances.",
-      technologies: ["Node.js", "Express", "Docker", "AWS API Gateway", "Redis"],
+      description:
+        "High-performance API gateway resolving client queries, compression rules, rate limit filters, and routing mappings across AWS instances.",
+      technologies: [
+        "Node.js",
+        "Express",
+        "Docker",
+        "AWS API Gateway",
+        "Redis",
+      ],
       github: "https://github.com/alex-carter-code/cloudstore",
       live: "",
       playStore: "",
       appStore: "",
-      images: ["https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600"],
+      images: [
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600",
+      ],
       video: "",
-      features: ["Redis cache queries", "IP rate throttling", "JWT bearer validation checks"],
+      features: [
+        "Redis cache queries",
+        "IP rate throttling",
+        "JWT bearer validation checks",
+      ],
       duration: "2 months",
       status: "published",
       teamSize: 3,
@@ -108,17 +144,53 @@ const getSeedData = () => {
       isPinned: false,
       isHidden: false,
       isFeatured: false,
-      createdAt: new Date().toISOString()
-    }
+      createdAt: new Date().toISOString(),
+    },
   ];
 
   const defaultSkills = [
-    { _id: "s_react", ownerId: ownerId, name: "React.js", category: "Frontend", level: 95 },
-    { _id: "s_node", ownerId: ownerId, name: "Node.js & Express", category: "Backend", level: 90 },
-    { _id: "s_mongo", ownerId: ownerId, name: "MongoDB & Mongoose", category: "Database", level: 88 },
-    { _id: "s_docker", ownerId: ownerId, name: "Docker & Kubernetes", category: "DevOps", level: 82 },
-    { _id: "s_ts", ownerId: ownerId, name: "TypeScript", category: "Programming Languages", level: 85 },
-    { _id: "s_git", ownerId: ownerId, name: "Git & GitHub Actions", category: "Tools", level: 92 }
+    {
+      _id: "s_react",
+      ownerId: ownerId,
+      name: "React.js",
+      category: "Frontend",
+      level: 95,
+    },
+    {
+      _id: "s_node",
+      ownerId: ownerId,
+      name: "Node.js & Express",
+      category: "Backend",
+      level: 90,
+    },
+    {
+      _id: "s_mongo",
+      ownerId: ownerId,
+      name: "MongoDB & Mongoose",
+      category: "Database",
+      level: 88,
+    },
+    {
+      _id: "s_docker",
+      ownerId: ownerId,
+      name: "Docker & Kubernetes",
+      category: "DevOps",
+      level: 82,
+    },
+    {
+      _id: "s_ts",
+      ownerId: ownerId,
+      name: "TypeScript",
+      category: "Programming Languages",
+      level: 85,
+    },
+    {
+      _id: "s_git",
+      ownerId: ownerId,
+      name: "Git & GitHub Actions",
+      category: "Tools",
+      level: 92,
+    },
   ];
 
   const defaultExperience = [
@@ -132,11 +204,9 @@ const getSeedData = () => {
       leavingDate: "Present",
       responsibilities: [
         "Architected secure verification gates for user onboarding pipelines.",
-        "Refactored Docker orchestration configurations, increasing cloud resources utilization by 22%."
+        "Refactored Docker orchestration configurations, increasing cloud resources utilization by 22%.",
       ],
-      achievements: [
-        "Received Outstanding Engineering Lead Award in 2025."
-      ]
+      achievements: ["Received Outstanding Engineering Lead Award in 2025."],
     },
     {
       _id: "exp_2",
@@ -148,12 +218,12 @@ const getSeedData = () => {
       leavingDate: "May 2024",
       responsibilities: [
         "Delivered responsive dashboards in React, integrating Chart.js feeds and dynamic custom themes.",
-        "Engineered Node gateway endpoints mapping CRUD requests."
+        "Engineered Node gateway endpoints mapping CRUD requests.",
       ],
       achievements: [
-        "Optimized frontend build times by 35% using tree-shaking mechanisms."
-      ]
-    }
+        "Optimized frontend build times by 35% using tree-shaking mechanisms.",
+      ],
+    },
   ];
 
   const defaultEducation = [
@@ -166,8 +236,8 @@ const getSeedData = () => {
       percentage: 94,
       cgpa: 3.85,
       duration: "2018 - 2022",
-      certificate: "https://example.com/stanford-diploma.pdf"
-    }
+      certificate: "https://example.com/stanford-diploma.pdf",
+    },
   ];
 
   const defaultCertificates = [
@@ -178,8 +248,9 @@ const getSeedData = () => {
       organization: "Amazon Web Services",
       date: "2024",
       verificationLink: "https://aws.amazon.com/verification",
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600"
-    }
+      image:
+        "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600",
+    },
   ];
 
   const defaultBlogs = [
@@ -188,8 +259,10 @@ const getSeedData = () => {
       ownerId: ownerId,
       title: "Securing MERN Stack Apps in Production",
       slug: "securing-mern-stack-production",
-      content: "# Introduction\n\nSecurity is paramount in web development. In this article, we'll explore key ways to secure Express APIs and React dashboards.\n\n## 1. Headers Configuration\nUse `helmet` to manage HTTP headers securely.\n\n```javascript\napp.use(helmet());\n```\n\n## 2. Token Restrictions\nEnsure all write queries are checked against session keys and unique security passwords.",
-      coverImage: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600",
+      content:
+        "# Introduction\n\nSecurity is paramount in web development. In this article, we'll explore key ways to secure Express APIs and React dashboards.\n\n## 1. Headers Configuration\nUse `helmet` to manage HTTP headers securely.\n\n```javascript\napp.use(helmet());\n```\n\n## 2. Token Restrictions\nEnsure all write queries are checked against session keys and unique security passwords.",
+      coverImage:
+        "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600",
       category: "Security",
       tags: ["MERN", "Security", "Express", "Node"],
       views: 110,
@@ -197,11 +270,16 @@ const getSeedData = () => {
       likedBy: [],
       readingTime: "4 min read",
       comments: [
-        { name: "John Doe", email: "john@example.com", content: "Great security checklist!", createdAt: new Date() }
+        {
+          name: "John Doe",
+          email: "john@example.com",
+          content: "Great security checklist!",
+          createdAt: new Date(),
+        },
       ],
       status: "published",
-      publishDate: new Date().toISOString()
-    }
+      publishDate: new Date().toISOString(),
+    },
   ];
 
   const defaultGallery = [
@@ -212,16 +290,31 @@ const getSeedData = () => {
       type: "image",
       url: "https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=600",
       category: "Events",
-      description: "Delivering a keynote on Node.js performance scaling."
-    }
+      description: "Delivering a keynote on Node.js performance scaling.",
+    },
   ];
 
   const defaultMessages = [];
   const defaultAnalytics = [
-    { _id: "a_1", ip: "127.0.0.1", country: "United States", device: "Desktop", browser: "Chrome", os: "Windows", actionType: "profile_view", timestamp: new Date().toISOString() }
+    {
+      _id: "a_1",
+      ip: "127.0.0.1",
+      country: "United States",
+      device: "Desktop",
+      browser: "Chrome",
+      os: "Windows",
+      actionType: "profile_view",
+      timestamp: new Date().toISOString(),
+    },
   ];
   const defaultNotifications = [
-    { _id: "n_1", text: "Welcome to your secure Portfolio admin panel!", type: "system", isRead: false, createdAt: new Date().toISOString() }
+    {
+      _id: "n_1",
+      text: "Welcome to your secure Portfolio admin panel!",
+      type: "system",
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    },
   ];
 
   return {
@@ -236,7 +329,7 @@ const getSeedData = () => {
     analytics: defaultAnalytics,
     notifications: defaultNotifications,
     gallery: defaultGallery,
-    otps: {}
+    otps: {},
   };
 };
 
@@ -251,10 +344,10 @@ export const initDb = () => {
 export const readDb = () => {
   initDb();
   try {
-    const data = fs.readFileSync(FILE_PATH, 'utf8');
+    const data = fs.readFileSync(FILE_PATH, "utf8");
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error reading mock DB file, resetting:', error);
+    console.error("Error reading mock DB file, resetting:", error);
     return getSeedData();
   }
 };
@@ -265,7 +358,7 @@ export const writeDb = (data) => {
     fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2));
     return true;
   } catch (error) {
-    console.error('Error writing mock DB file:', error);
+    console.error("Error writing mock DB file:", error);
     return false;
   }
 };
@@ -280,15 +373,19 @@ export const mockDbHelper = {
   saveToCollection: (collectionName, item) => {
     const db = readDb();
     if (!db[collectionName]) db[collectionName] = [];
-    
-    const index = db[collectionName].findIndex(x => x._id === item._id);
+
+    const index = db[collectionName].findIndex((x) => x._id === item._id);
     if (index > -1) {
       db[collectionName][index] = { ...db[collectionName][index], ...item };
     } else {
-      if (!item._id) item._id = collectionName.charAt(0) + '_' + Math.random().toString(36).substr(2, 9);
+      if (!item._id)
+        item._id =
+          collectionName.charAt(0) +
+          "_" +
+          Math.random().toString(36).substr(2, 9);
       db[collectionName].push(item);
     }
-    
+
     writeDb(db);
     return item;
   },
@@ -296,8 +393,8 @@ export const mockDbHelper = {
   deleteFromCollection: (collectionName, id) => {
     const db = readDb();
     if (!db[collectionName]) return false;
-    
-    const index = db[collectionName].findIndex(x => x._id === id);
+
+    const index = db[collectionName].findIndex((x) => x._id === id);
     if (index > -1) {
       db[collectionName].splice(index, 1);
       writeDb(db);
@@ -329,5 +426,5 @@ export const mockDbHelper = {
       return true;
     }
     return false;
-  }
+  },
 };
